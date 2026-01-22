@@ -52,18 +52,18 @@ describe("posts tests", () => {
             .set("Authorization", `Bearer ${loginedUserData.accessToken}`)
             .send(postsTests[0]);
         expect(response.statusCode).toBe(201);
-        expect(response.body.title).toBe(postsTests[0].title);
-        expect(response.body.senderId).toBe(loginedUserData.user._id);
-        expect(response.body.description).toBe(postsTests[0].description);
+        expect(response.body.drinkName).toBe(postsTests[0].drinkName);
+        expect(response.body.owner).toBe(loginedUserData.user._id);
+        expect(response.body.instructions).toBe(postsTests[0].instructions);
         newPostId = response.body._id;
     });
 
     test("get post by id", async () => {
         const response = await request(app).get(`${baseUrl}/${newPostId}`);
         expect(response.statusCode).toBe(200);
-        expect(response.body.title).toBe(postsTests[0].title);
-        expect(response.body.senderId).toBe(loginedUserData.user._id);
-        expect(response.body.description).toBe(postsTests[0].description);
+        expect(response.body.drinkName).toBe(postsTests[0].drinkName);
+        expect(response.body.owner).toBe(loginedUserData.user._id);
+        expect(response.body.instructions).toBe(postsTests[0].instructions);
     });
 
     test("fails to get post by id that does not exist", async () => {
@@ -78,8 +78,8 @@ describe("posts tests", () => {
             .set("Authorization", `Bearer ${loginedUserData.accessToken}`);
         expect(response.statusCode).toBe(200);
         expect(response.body.length).toBe(1);
-        expect(response.body[0].title).toBe(postsTests[0].title);
-        expect(response.body[0].description).toBe(postsTests[0].description);
+        expect(response.body[0].drinkName).toBe(postsTests[0].drinkName);
+        expect(response.body[0].instructions).toBe(postsTests[0].instructions);
     });
 
     test("fails to get post by userId that does not exist", async () => {
@@ -92,10 +92,10 @@ describe("posts tests", () => {
         const response = await request(app)
             .put(`${baseUrl}/${newPostId}`)
             .set("Authorization", `Bearer ${loginedUserData.accessToken}`)
-            .send({ title: "updated title", description: "updated description" });
+            .send({ drinkName: "updated drinkName", instructions: "updated instructions" });
         expect(response.statusCode).toBe(200);
-        expect(response.body.title).toBe("updated title");
-        expect(response.body.description).toBe("updated description");
+        expect(response.body.drinkName).toBe("updated drinkName");
+        expect(response.body.instructions).toBe("updated instructions");
     });
 
     test("fails to update post because it is not the user's own", async () => {

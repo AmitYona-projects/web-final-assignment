@@ -15,15 +15,17 @@ export const getPostsBySenderIdSchema = emptyRequestSchema.keys({
 
 export const createPostSchema = emptyRequestSchema.keys({
     body: {
-        title: Joi.string().required(),
-        description: Joi.string().required(),
+        drinkName: Joi.string().required(),
+        instructions: Joi.string().required(),
+        drinkImage: Joi.string().optional(),
     },
 });
 
 export const updatePostSchema = emptyRequestSchema.keys({
     body: {
-        title: Joi.string().optional(),
-        description: Joi.string().optional(),
+        drinkName: Joi.string().optional(),
+        instructions: Joi.string().optional(),
+        drinkImage: Joi.string().optional(),
     },
     params: {
         id: MongoIdSchema.required(),

@@ -13,17 +13,17 @@ export class PostManager {
     };
 
     static getPostsBySenderId = async (senderId: string): Promise<IMongoPost[]> => {
-        return PostModel.find({ senderId: senderId }).orFail(new DocumentNotFoundError(senderId)).lean().exec();
+        return PostModel.find({ owner: senderId }).orFail(new DocumentNotFoundError(senderId)).lean().exec();
     };
 
     static createPost = async (post: IPost, senderId: string): Promise<IMongoPost> => {
-        return PostModel.create({ ...post, senderId });
+        return PostModel.create({ ...post, owner: senderId });
     };
 
     static updatePostById = async (id: string, update: Partial<IPost>, senderId: string): Promise<IMongoPost> => {
         const post = await PostModel.findById(id).orFail(new DocumentNotFoundError(id)).lean().exec();
 
-        if (post.senderId.toString() !== senderId) {
+        if (post.owner.toString() !== senderId) {
             throw new ServerError(StatusCodes.FORBIDDEN, "You are not allowed to update this post");
         }
 
@@ -36,7 +36,7 @@ export class PostManager {
     static deletePostById = async (id: string, senderId: string): Promise<string> => {
         const post = await PostModel.findById(id).orFail(new DocumentNotFoundError(id)).lean().exec();
 
-        if (post.senderId.toString() !== senderId) {
+        if (post.owner.toString() !== senderId) {
             throw new ServerError(StatusCodes.FORBIDDEN, "You are not allowed to delete this post");
         }
 
