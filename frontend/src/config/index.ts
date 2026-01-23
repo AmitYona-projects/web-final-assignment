@@ -8,4 +8,9 @@ export const config = {
   googleClientId: env.VITE_GOOGLE_CLIENT_ID,
   accessTokenStorageKey: env.VITE_ACCESS_TOKEN_STORAGE_KEY || "accessToken",
   refreshTokenStorageKey: env.VITE_REFRESH_TOKEN_STORAGE_KEY || "refreshToken",
+  google: {
+    clientId: env.VITE_GOOGLE_CLIENT_ID,
+    loginFlow: "auth-code" as const,
+    loginScope: "profile email",
+  },
 };

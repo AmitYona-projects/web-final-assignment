@@ -2,18 +2,10 @@ import { useMutation } from "@tanstack/react-query";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/auth";
-import type { LoginRequest, RegisterRequest, ResetPasswordRequest, AuthResponse } from "../services/auth";
+import type { LoginRequest, RegisterRequest,  AuthResponse } from "../services/auth";
+import { clearTokens, storeTokens } from "../utils/localStorage";
 import { config } from "../config";
 
-const storeTokens = (accessToken: string, refreshToken: string) => {
-    localStorage.setItem(config.accessTokenStorageKey, accessToken);
-    localStorage.setItem(config.refreshTokenStorageKey, refreshToken);
-};
-
-const clearTokens = () => {
-    localStorage.removeItem(config.accessTokenStorageKey);
-    localStorage.removeItem(config.refreshTokenStorageKey);
-};
 
 export const useAuth = () => {
     const navigate = useNavigate();
@@ -30,8 +22,8 @@ export const useAuth = () => {
     });
 
     const googleLoginFlow = useGoogleLogin({
-        flow: "auth-code",
-        scope: "profile email",
+        flow: config.google.loginFlow,
+        scope: config.google.loginScope,
         onSuccess: (codeResponse) => {
             googleLogin.mutate({ code: codeResponse.code });
         },
@@ -59,16 +51,6 @@ export const useAuth = () => {
         },
         onError: (error) => {
             console.error("Registration error:", error);
-        },
-    });
-
-    const resetPassword = useMutation<{ message: string }, Error, ResetPasswordRequest>({
-        mutationFn: authService.resetPassword,
-        onSuccess: (data) => {
-            console.log("Password reset email sent:", data.message);
-        },
-        onError: (error) => {
-            console.error("Reset password error:", error);
         },
     });
 
@@ -102,15 +84,6 @@ export const useAuth = () => {
             isSuccess: register.isSuccess,
             error: register.error,
             data: register.data,
-        },
-        resetPassword: {
-            mutate: resetPassword.mutate,
-            mutateAsync: resetPassword.mutateAsync,
-            isPending: resetPassword.isPending,
-            isError: resetPassword.isError,
-            isSuccess: resetPassword.isSuccess,
-            error: resetPassword.error,
-            data: resetPassword.data,
         },
         logout: () => {
             clearTokens();
