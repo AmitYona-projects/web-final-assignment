@@ -28,4 +28,10 @@ export class AuthController {
 
         res.json(result);
     };
+
+    static loginGoogle = async (req: Request, res: Response) => {
+        const result = await AuthManager.loginGoogle(req);
+
+        res.json(result);
+    };
 }

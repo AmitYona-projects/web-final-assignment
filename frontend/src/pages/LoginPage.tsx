@@ -9,10 +9,11 @@ import {
     Alert,
     Divider,
     Link,
+    Stack,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { Google as GoogleIcon } from "@mui/icons-material";
 import useAuth from "../hooks/useAuth";
+import { GoogleLogin } from "@react-oauth/google";
 
 const loginSchema = z.object({
     email: z.string().email("Invalid email address").min(1, "Email is required"),
@@ -41,7 +42,7 @@ const LoginPage: React.FC = () => {
     };
 
     return (
-        <Box sx={{ maxWidth: 400, mx: "auto" }}>
+        <Box sx={{ mx: "auto" }}>
             <Typography variant="h4" component="h1" gutterBottom align="center" fontWeight="bold">
                 Welcome Back
             </Typography>
@@ -108,17 +109,17 @@ const LoginPage: React.FC = () => {
                 </Typography>
             </Divider>
 
-            <Button
-                fullWidth
-                variant="outlined"
-                size="large"
-                startIcon={<GoogleIcon />}
-                onClick={googleLogin.triggerFlow}
-                disabled={googleLogin.isPending}
-                sx={{ mb: 3 }}
-            >
-                {googleLogin.isPending ? "Signing in..." : "Continue with Google"}
-            </Button>
+            <Stack direction="row" justifyContent="center" alignItems="center">
+                <GoogleLogin
+                    onSuccess={googleLogin.triggerFlow}
+                    onError={() => console.error("Google login error")}
+                    text="continue_with"
+                    shape="circle"
+                    theme="outline"
+                    logo_alignment="center"
+                    width="700px"
+                />
+            </Stack>
 
             <Box sx={{ textAlign: "center" }}>
                 <Typography variant="body2" color="text.secondary">

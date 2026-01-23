@@ -2,6 +2,7 @@ import { once } from "events";
 import express from "express";
 import helmet from "helmet";
 import http from "http";
+import cors from "cors";
 import { errorMiddleware } from "../utils/express/middlewares";
 import { loggerMiddleware } from "../utils/logger/middleware";
 import appRouter from "./router";
@@ -22,6 +23,7 @@ export class Server {
         app.use(helmet());
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
+        app.use(cors());
 
         app.use(loggerMiddleware);
         app.use(appRouter);

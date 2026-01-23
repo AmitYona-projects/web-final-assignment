@@ -8,9 +8,12 @@ import {
     Typography,
     Alert,
     Link,
+    Stack,
+    Divider,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import { GoogleLogin } from "@react-oauth/google";
 
 const registrationSchema = z
     .object({
@@ -31,7 +34,7 @@ const registrationSchema = z
 type RegistrationFormData = z.infer<typeof registrationSchema>;
 
 const RegistrationPage: React.FC = () => {
-    const { register: registerMutation } = useAuth();
+    const { register: registerMutation, googleLogin } = useAuth();
 
     const {
         control,
@@ -51,7 +54,7 @@ const RegistrationPage: React.FC = () => {
     };
 
     return (
-        <Box sx={{ maxWidth: 400, mx: "auto" }}>
+        <Box sx={{ mx: "auto" }}>
             <Typography variant="h4" component="h1" gutterBottom align="center" fontWeight="bold">
                 Create Account
             </Typography>
@@ -127,6 +130,24 @@ const RegistrationPage: React.FC = () => {
                     {registerMutation.isPending ? "Creating account..." : "Sign Up"}
                 </Button>
             </form>
+
+            <Divider sx={{ my: 3 }}>
+                <Typography variant="body2" color="text.secondary">
+                    OR
+                </Typography>
+            </Divider>
+
+            <Stack direction="row" justifyContent="center" alignItems="center">
+                <GoogleLogin
+                    onSuccess={googleLogin.triggerFlow}
+                    onError={() => console.error("Google login error")}
+                    text="continue_with"
+                    shape="circle"
+                    theme="outline"
+                    logo_alignment="center"
+                    width="700px"
+                />
+            </Stack>
 
             <Box sx={{ textAlign: "center" }}>
                 <Typography variant="body2" color="text.secondary">

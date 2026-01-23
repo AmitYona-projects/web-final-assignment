@@ -19,6 +19,10 @@ const config = {
         refreshTokenExpiration: env.get("REFRESH_TOKEN_EXPIRATION").default("7d").asString(),
         bearerPrefix: env.get("BEARER_PREFIX").default("Bearer ").asString(),
     },
+    google: {
+        clientId: env.get("GOOGLE_CLIENT_ID").required().asString(),
+        clientSecret: env.get("GOOGLE_CLIENT_SECRET").asString(),
+    },
     test: {
         posts: {
             route: "/posts",

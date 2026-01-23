@@ -5,11 +5,10 @@ const AuthLayout: React.FC = () => {
     return (
         <Box
             sx={{
-                minHeight: "100vh",
+                minHeight: "80vh",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "background.default",
                 padding: 2,
             }}
         >

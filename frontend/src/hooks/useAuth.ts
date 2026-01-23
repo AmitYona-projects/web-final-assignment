@@ -1,17 +1,16 @@
 import { useMutation } from "@tanstack/react-query";
-import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/auth";
-import type { LoginRequest, RegisterRequest,  AuthResponse } from "../services/auth";
+import type { LoginRequest, RegisterRequest, AuthResponse } from "../services/auth";
 import { clearTokens, storeTokens } from "../utils/localStorage";
-import { config } from "../config";
+import type { CredentialResponse } from "@react-oauth/google";
 
 
 export const useAuth = () => {
     const navigate = useNavigate();
 
-    const googleLogin = useMutation<AuthResponse, Error, { code: string }>({
-        mutationFn: ({ code }) => authService.googleLogin({ code }),
+    const googleLogin = useMutation<AuthResponse, Error, CredentialResponse>({
+        mutationFn: (data) => authService.googleLogin({ code: data.credential! }),
         onSuccess: (data) => {
             storeTokens(data.accessToken, data.refreshToken);
             navigate("/");
@@ -21,16 +20,6 @@ export const useAuth = () => {
         },
     });
 
-    const googleLoginFlow = useGoogleLogin({
-        flow: config.google.loginFlow,
-        scope: config.google.loginScope,
-        onSuccess: (codeResponse) => {
-            googleLogin.mutate({ code: codeResponse.code });
-        },
-        onError: (error) => {
-            console.error("Google OAuth error:", error);
-        },
-    });
 
     const regularLogin = useMutation<AuthResponse, Error, LoginRequest>({
         mutationFn: authService.login,
@@ -54,9 +43,6 @@ export const useAuth = () => {
         },
     });
 
-    const handleGoogleLogin = () => {
-        googleLoginFlow();
-    };
 
     return {
         regularLogin: {
@@ -69,7 +55,7 @@ export const useAuth = () => {
             data: regularLogin.data,
         },
         googleLogin: {
-            triggerFlow: handleGoogleLogin,
+            triggerFlow: googleLogin.mutateAsync,
             isPending: googleLogin.isPending,
             isError: googleLogin.isError,
             isSuccess: googleLogin.isSuccess,

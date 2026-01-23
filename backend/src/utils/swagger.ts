@@ -160,6 +160,17 @@ const swaggerOptions: swaggerJSDoc.OAS3Options = {
                         },
                     },
                 },
+                GoogleLoginRequest: {
+                    type: "object",
+                    required: ["code"],
+                    properties: {
+                        code: {
+                            type: "string",
+                            description: "Google OAuth authorization code",
+                            example: "4/0ASc3gC2J-pxV4yW-l1dq6o-30Rya7krfbLDyzpxtAx2jNEW-VM3A5_L4ANhHnA4a6KFrVA",
+                        },
+                    },
+                },
                 AuthResponse: {
                     type: "object",
                     properties: {
