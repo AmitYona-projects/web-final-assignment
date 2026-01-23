@@ -1,10 +1,22 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App.tsx";
+import { BrowserRouter } from "react-router-dom";
+import { config } from "./config/index.ts";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { ThemeProvider } from "@mui/material";
+import theme from "./theme.ts";
 
-createRoot(document.getElementById('root')!).render(
+const clientId = config.googleClientId;
+
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <BrowserRouter>
+      <GoogleOAuthProvider clientId={clientId}>
+        <ThemeProvider theme={theme}>
+          <App />
+        </ThemeProvider>
+      </GoogleOAuthProvider>
+    </BrowserRouter>
   </StrictMode>,
-)
+);
