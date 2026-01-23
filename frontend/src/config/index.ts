@@ -6,4 +6,6 @@ export const config = {
   uploadFolderUrl: env.VITE_UPLOAD_FOLDER_URL,
   publicFolderUrl: env.VITE_PUBLIC_FOLDER_URL,
   googleClientId: env.VITE_GOOGLE_CLIENT_ID,
+  accessTokenStorageKey: env.VITE_ACCESS_TOKEN_STORAGE_KEY || "accessToken",
+  refreshTokenStorageKey: env.VITE_REFRESH_TOKEN_STORAGE_KEY || "refreshToken",
 };
