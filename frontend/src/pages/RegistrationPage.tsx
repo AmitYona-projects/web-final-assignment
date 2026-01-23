@@ -7,55 +7,81 @@ import {
     Button,
     Typography,
     Alert,
-    Divider,
     Link,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { Google as GoogleIcon } from "@mui/icons-material";
 import useAuth from "../hooks/useAuth";
 
-const loginSchema = z.object({
-    email: z.string().email("Invalid email address").min(1, "Email is required"),
-    password: z.string().min(1, "Password is required"),
-});
+const registrationSchema = z
+    .object({
+        username: z
+            .string()
+            .min(3, "Username must be at least 3 characters")
+            .max(20, "Username cannot exceed 20 characters")
+            .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+        email: z.string().email("Invalid email address").min(1, "Email is required"),
+        password: z
+            .string()
+            .min(8, "Password must be at least 8 characters")
+            .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+            .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+            .regex(/[0-9]/, "Password must contain at least one number"),
+    })
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type RegistrationFormData = z.infer<typeof registrationSchema>;
 
-const LoginPage: React.FC = () => {
-    const { regularLogin, googleLogin } = useAuth();
+const RegistrationPage: React.FC = () => {
+    const { register: registerMutation } = useAuth();
 
     const {
         control,
         handleSubmit,
         formState: { errors, isSubmitting },
-    } = useForm<LoginFormData>({
-        resolver: zodResolver(loginSchema),
+    } = useForm<RegistrationFormData>({
+        resolver: zodResolver(registrationSchema),
         defaultValues: {
+            username: "",
             email: "",
             password: "",
         },
     });
 
-    const onSubmit = async (data: LoginFormData) => {
-        regularLogin.mutate(data);
+    const onSubmit = async (data: RegistrationFormData) => {
+        registerMutation.mutate(data);
     };
 
     return (
         <Box sx={{ maxWidth: 400, mx: "auto" }}>
             <Typography variant="h4" component="h1" gutterBottom align="center" fontWeight="bold">
-                Welcome Back
+                Create Account
             </Typography>
             <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
-                Sign in to your account
+                Sign up to get started
             </Typography>
 
-            {(regularLogin.isError || googleLogin.isError) && (
+            {registerMutation.isError && (
                 <Alert severity="error" sx={{ mb: 2 }}>
-                    {regularLogin.error?.message || googleLogin.error?.message || "Login failed. Please try again."}
+                    {registerMutation.error?.message || "Registration failed. Please try again."}
                 </Alert>
             )}
 
             <form onSubmit={handleSubmit(onSubmit)}>
+                <Controller
+                    name="username"
+                    control={control}
+                    render={({ field }) => (
+                        <TextField
+                            {...field}
+                            fullWidth
+                            label="Username"
+                            error={!!errors.username}
+                            helperText={errors.username?.message}
+                            sx={{ mb: 2 }}
+                            autoComplete="username"
+                        />
+                    )}
+                />
+
                 <Controller
                     name="email"
                     control={control}
@@ -84,8 +110,8 @@ const LoginPage: React.FC = () => {
                             type="password"
                             error={!!errors.password}
                             helperText={errors.password?.message}
-                            sx={{ mb: 3 }}
-                            autoComplete="current-password"
+                            sx={{ mb: 2 }}
+                            autoComplete="new-password"
                         />
                     )}
                 />
@@ -95,36 +121,18 @@ const LoginPage: React.FC = () => {
                     fullWidth
                     variant="contained"
                     size="large"
-                    disabled={isSubmitting || regularLogin.isPending}
+                    disabled={isSubmitting || registerMutation.isPending}
                     sx={{ mb: 2 }}
                 >
-                    {regularLogin.isPending ? "Signing in..." : "Sign In"}
+                    {registerMutation.isPending ? "Creating account..." : "Sign Up"}
                 </Button>
             </form>
 
-            <Divider sx={{ my: 3 }}>
-                <Typography variant="body2" color="text.secondary">
-                    OR
-                </Typography>
-            </Divider>
-
-            <Button
-                fullWidth
-                variant="outlined"
-                size="large"
-                startIcon={<GoogleIcon />}
-                onClick={googleLogin.triggerFlow}
-                disabled={googleLogin.isPending}
-                sx={{ mb: 3 }}
-            >
-                {googleLogin.isPending ? "Signing in..." : "Continue with Google"}
-            </Button>
-
             <Box sx={{ textAlign: "center" }}>
                 <Typography variant="body2" color="text.secondary">
-                    Don't have an account?{" "}
-                    <Link component={RouterLink} to="/auth/register" underline="hover">
-                        Sign up
+                    Already have an account?{" "}
+                    <Link component={RouterLink} to="/auth/login" underline="hover">
+                        Sign in
                     </Link>
                 </Typography>
             </Box>
@@ -132,4 +140,4 @@ const LoginPage: React.FC = () => {
     );
 };
 
-export default LoginPage;
+export default RegistrationPage;
