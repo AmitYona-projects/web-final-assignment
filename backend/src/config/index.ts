@@ -9,7 +9,6 @@ const config = {
     mongo: {
         url: env.get("MONGO_URL").default("mongodb://localhost:27017/").asUrlString(),
         postsCollectionName: env.get("POSTS_COLLECTION_NAME").default("posts").required().asString(),
-        commentsCollectionName: env.get("COMMENTS_COLLECTION_NAME").default("comments").required().asString(),
         usersCollectionName: env.get("USERS_COLLECTION_NAME").default("users").required().asString(),
     },
     auth: {
@@ -21,9 +20,6 @@ const config = {
         bearerPrefix: env.get("BEARER_PREFIX").default("Bearer ").asString(),
     },
     test: {
-        comments: {
-            route: "/comments",
-        },
         posts: {
             route: "/posts",
         },

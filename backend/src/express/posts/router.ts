@@ -185,7 +185,7 @@ postRouter.put(
  *               properties:
  *                 message:
  *                   type: string
- *                   description: Error message
+ *                   description: Notification message
  *                   example: "Post <id> deleted successfully"
  *       '404':
  *         $ref: '#/components/responses/NotFoundError'

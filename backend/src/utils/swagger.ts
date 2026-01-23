@@ -75,69 +75,36 @@ const swaggerOptions: swaggerJSDoc.OAS3Options = {
                             description: "Unique ID of the post (MongoDB ObjectId)",
                             example: "67a1d205c689f9a4e5476a1b",
                         },
-                        title: {
+                        drinkName: {
                             type: "string",
-                            description: "Title of the post",
-                            example: "My first post title",
+                            description: "Name of the drink",
+                            example: "My first drink name",
                         },
-                        description: {
+                        instructions: {
                             type: "string",
-                            description: "Description of the post",
+                            description: "Instructions of the drink",
                             example: "Having a great day!",
                         },
-                        senderId: {
+                        drinkImage: {
                             type: "string",
-                            description: "User ID of the sender (User MongoDB ObjectId)",
+                            description: "Image of the drink",
+                            example: "drink.png",
+                        },
+                        owner: {
+                            type: "string",
+                            description: "User ID of the owner (User MongoDB ObjectId)",
                             example: "67a1d205c689f9a4e5476a1b",
                         },
                         createdAt: {
                             type: "string",
                             format: "date-time",
-                            description: "Timestamp of when the post was created",
+                            description: "Timestamp of when the drink was created",
                             example: "2026-01-01T00:00:00.000Z",
                         },
                         updatedAt: {
                             type: "string",
                             format: "date-time",
-                            description: "Timestamp of when the post was last updated",
-                            example: "2026-01-01T00:00:00.000Z",
-                        },
-                    },
-                },
-                Comment: {
-                    type: "object",
-                    required: ["_id", "commentText", "postId", "senderId"],
-                    properties: {
-                        _id: {
-                            type: "string",
-                            description: "Unique ID of the comment (MongoDB ObjectId)",
-                            example: "67a1d205c689f9a4e5476a1b",
-                        },
-                        commentText: {
-                            type: "string",
-                            description: "Content of the comment",
-                            example: "This is a test comment",
-                        },
-                        postId: {
-                            type: "string",
-                            description: "ID of the post (Post MongoDB ObjectId)",
-                            example: "67a1d205c689f9a4e5476a1a",
-                        },
-                        senderId: {
-                            type: "string",
-                            description: "ID of the sender (User MongoDB ObjectId)",
-                            example: "67a1d205c689f9a4e5476a1b",
-                        },
-                        createdAt: {
-                            type: "string",
-                            format: "date-time",
-                            description: "Timestamp of when the comment was created",
-                            example: "2026-01-01T00:00:00.000Z",
-                        },
-                        updatedAt: {
-                            type: "string",
-                            format: "date-time",
-                            description: "Timestamp of when the comment was last updated",
+                            description: "Timestamp of when the drink was last updated",
                             example: "2026-01-01T00:00:00.000Z",
                         },
                     },
@@ -212,15 +179,20 @@ const swaggerOptions: swaggerJSDoc.OAS3Options = {
                 },
                 CreatePostRequest: {
                     type: "object",
-                    required: ["title", "description", "senderId"],
+                    required: ["drinkName", "instructions", "owner"],
                     properties: {
-                        title: { type: "string", description: "Title of the post", example: "My first post title" },
-                        description: {
+                        drinkName: { type: "string", description: "Name of the drink", example: "My first drink name" },
+                        instructions: {
                             type: "string",
-                            description: "Description of the post",
+                            description: "Instructions of the drink",
                             example: "Having a great day!",
                         },
-                        senderId: {
+                        drinkImage: {
+                            type: "string",
+                            description: "Image of the drink",
+                            example: "drink.png",
+                        },
+                        owner: {
                             type: "string",
                             description: "User ID of the sender (User MongoDB ObjectId)",
                             example: "67a1d205c689f9a4e5476a1b",
@@ -229,57 +201,19 @@ const swaggerOptions: swaggerJSDoc.OAS3Options = {
                 },
                 UpdatePostRequest: {
                     type: "object",
-                    required: ["title", "description", "senderId"],
                     properties: {
-                        title: { type: "string", description: "Title of the post", example: "My first post title" },
-                        description: {
+                        drinkName: { type: "string", description: "Name of the drink", example: "My first drink name" },
+                        instructions: {
                             type: "string",
-                            description: "Description of the post",
+                            description: "Instructions of the drink",
                             example: "Having a great day!",
                         },
-                        senderId: {
+                        drinkImage: {
                             type: "string",
-                            description: "User ID of the sender (User MongoDB ObjectId)",
-                            example: "67a1d205c689f9a4e5476a1b",
+                            description: "Image of the drink",
+                            example: "drink.png",
                         },
-                    },
-                },
-                CreateCommentRequest: {
-                    type: "object",
-                    required: ["commentText", "postId", "senderId"],
-                    properties: {
-                        commentText: {
-                            type: "string",
-                            description: "Content of the comment",
-                            example: "This is a test comment",
-                        },
-                        postId: {
-                            type: "string",
-                            description: "ID of the post (Post MongoDB ObjectId)",
-                            example: "67a1d205c689f9a4e5476a1a",
-                        },
-                        senderId: {
-                            type: "string",
-                            description: "User ID of the sender (User MongoDB ObjectId)",
-                            example: "67a1d205c689f9a4e5476a1b",
-                        },
-                    },
-                },
-                UpdateCommentRequest: {
-                    type: "object",
-                    required: ["commentText", "postId", "senderId"],
-                    properties: {
-                        commentText: {
-                            type: "string",
-                            description: "Content of the comment",
-                            example: "This is a test comment",
-                        },
-                        postId: {
-                            type: "string",
-                            description: "ID of the post (Post MongoDB ObjectId)",
-                            example: "67a1d205c689f9a4e5476a1a",
-                        },
-                        senderId: {
+                        owner: {
                             type: "string",
                             description: "User ID of the sender (User MongoDB ObjectId)",
                             example: "67a1d205c689f9a4e5476a1b",
