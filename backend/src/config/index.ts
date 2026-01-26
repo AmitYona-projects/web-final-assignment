@@ -21,7 +21,7 @@ const config = {
     },
     google: {
         clientId: env.get("GOOGLE_CLIENT_ID").required().asString(),
-        clientSecret: env.get("GOOGLE_CLIENT_SECRET").asString(),
+        clientSecret: env.get("GOOGLE_CLIENT_SECRET").required().asString(),
     },
     test: {
         posts: {
