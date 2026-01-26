@@ -139,4 +139,34 @@ authRouter.post(
     wrapAuthMiddleware(AuthController.refreshToken)
 );
 
+/**
+ * @swagger
+ * /auth/login-google:
+ *   post:
+ *     summary: Login with Google
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/GoogleLoginRequest'
+ *     responses:
+ *       200:
+ *         description: User logged in with Google successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *       400:
+ *         $ref: '#/components/responses/BadRequestError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ */
+authRouter.post("/login-google", wrapController(AuthController.loginGoogle));
+
 export default authRouter;

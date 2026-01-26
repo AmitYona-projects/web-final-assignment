@@ -3,6 +3,16 @@ import { ServerError } from "../../utils/errors";
 import { UserModel } from "../users/model";
 import { ILoginData, IRegisterData, IAuthResponse, ITokenInfo } from "./interface";
 import { comparePasswords, encryptPassword, generateTokens } from "../../utils/auth";
+import { OAuth2Client } from "google-auth-library";
+import config from "../../config";
+import { Request } from "express";
+import { IMongoUser } from "../users/interface";
+
+const client = new OAuth2Client(
+    config.google.clientId,
+    config.google.clientSecret,
+    undefined // redirect URI not needed for token exchange
+);
 
 export class AuthManager {
     static register = async (registerData: IRegisterData): Promise<IAuthResponse> => {
@@ -76,5 +86,50 @@ export class AuthManager {
         await user.save();
 
         return { accessToken: newAccessToken, refreshToken: newRefreshToken, user };
+    };
+
+    static loginGoogle = async (req: Request): Promise<IAuthResponse> => {
+        const { code } = req.body;
+
+        if (!code) {
+            throw new ServerError(StatusCodes.BAD_REQUEST, "Authorization code is required");
+        }
+
+        try {
+            const ticket = await client.verifyIdToken({
+                idToken: code,
+                audience: config.google.clientId,
+            });
+            const payload = ticket.getPayload();
+            const email = payload?.email;
+
+            if (!payload || !email) {
+                throw new ServerError(StatusCodes.BAD_REQUEST, "Invalid token payload: email not found");
+            }
+
+            let user: IMongoUser | null = await UserModel.findOne({ email });
+
+            if (!user) {
+                const username = payload.name || email.split("@")[0];
+                user = await UserModel.create({
+                    email,
+                    username,
+                    password: await encryptPassword(new Date().toISOString()),
+                    refreshTokens: [],
+                });
+            }
+
+            const { accessToken, refreshToken } = generateTokens(user._id.toString());
+            user.refreshTokens.push(refreshToken);
+            await user.save();
+
+            return { accessToken, refreshToken, user };
+        } catch (error) {
+            if (error instanceof ServerError) {
+                throw error;
+            }
+            const errorMessage = error instanceof Error ? error.message : "Invalid authorization code";
+            throw new ServerError(StatusCodes.UNAUTHORIZED, `Google authentication failed: ${errorMessage}`);
+        }
     };
 }
