@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage'
 import AuthLayout from './layouts/AuthLayout'
 import LoginPage from './pages/LoginPage'
 import RegistrationPage from './pages/RegistrationPage'
+import ProfilePage from './pages/ProfilePage'
 import AppLayout from './layouts/AppLayout'
 import AuthRequired from './components/AuthRequired'
 
@@ -19,6 +20,7 @@ function App() {
         }
       >
         <Route index element={<HomePage />} />
+        <Route path='profile' element={<ProfilePage />} />
       </Route>
       <Route path='/auth' element={<AuthLayout />}>
         <Route index element={<Navigate to='login' />} />

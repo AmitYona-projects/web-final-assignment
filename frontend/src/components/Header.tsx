@@ -8,25 +8,26 @@ import {
     Menu,
     MenuItem,
     Avatar,
-    useTheme,
 } from "@mui/material";
 import {
     AccountCircle,
     Logout,
     Person,
     Home,
+    Article,
 } from "@mui/icons-material";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import type React from "react";
 import { useAuth } from "../hooks/useAuth";
 
+
+
 const Header: React.FC = () => {
-    const theme = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
-    const { logout, isAuthenticated } = useAuth();
-    
+    const { logout } = useAuth();
+
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -51,6 +52,17 @@ const Header: React.FC = () => {
         return location.pathname === path;
     };
 
+    const profileMenuItems: { label: string; icon: React.ReactNode; onClick?: () => void }[] = [
+        { label: "My Profile", icon: <Person />, onClick: handleProfileClick },
+        { label: "Logout", icon: <Logout />, onClick: handleLogout },
+    ];
+
+    const navBarItems: { label: string; icon: React.ReactNode; path: string }[] = [
+        { label: "Home", icon: <Home />, path: "/" },
+        { label: "Profile", icon: <Person />, path: "/profile" },
+        { label: "My Posts", icon: <Article />, path: "/posts/my" },
+    ];
+
     return (
         <AppBar position="static" elevation={2}>
             <Toolbar sx={{ justifyContent: "space-between", px: 4 }}>
@@ -74,96 +86,41 @@ const Header: React.FC = () => {
                 </Box>
 
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Button
-                        component={Link}
-                        to="/"
-                        color="inherit"
-                        startIcon={<Home />}
-                        sx={{
-                            backgroundColor: isActive("/") ? "rgba(255, 255, 255, 0.1)" : "transparent",
+                    {navBarItems.map((item) => (
+                        <Button key={item.label} component={Link} to={item.path} color="inherit" startIcon={item.icon} sx={{
+                            backgroundColor: isActive(item.path) ? "rgba(255, 255, 255, 0.1)" : "transparent",
                             "&:hover": {
                                 backgroundColor: "rgba(255, 255, 255, 0.1)",
                             },
+                        }}>
+                            {item.label}
+                        </Button>
+                    ))}
+                    <IconButton onClick={handleMenuOpen} color="inherit" sx={{ ml: 1 }}>
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: "secondary.main" }}>
+                            <AccountCircle />
+                        </Avatar>
+                    </IconButton>
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl)}
+                        onClose={handleMenuClose}
+                        anchorOrigin={{
+                            vertical: "bottom",
+                            horizontal: "right",
+                        }}
+                        transformOrigin={{
+                            vertical: "top",
+                            horizontal: "right",
                         }}
                     >
-                        Home
-                    </Button>
-
-                    {isAuthenticated ? (
-                        <>
-                            <Button
-                                component={Link}
-                                to="/profile"
-                                color="inherit"
-                                startIcon={<Person />}
-                                sx={{
-                                    backgroundColor: isActive("/profile") ? "rgba(255, 255, 255, 0.1)" : "transparent",
-                                    "&:hover": {
-                                        backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                    },
-                                }}
-                            >
-                                Profile
-                            </Button>
-                            <IconButton onClick={handleMenuOpen} color="inherit" sx={{ ml: 1 }}>
-                                <Avatar sx={{ width: 32, height: 32, bgcolor: "secondary.main" }}>
-                                    <AccountCircle />
-                                </Avatar>
-                            </IconButton>
-                            <Menu
-                                anchorEl={anchorEl}
-                                open={Boolean(anchorEl)}
-                                onClose={handleMenuClose}
-                                anchorOrigin={{
-                                    vertical: "bottom",
-                                    horizontal: "right",
-                                }}
-                                transformOrigin={{
-                                    vertical: "top",
-                                    horizontal: "right",
-                                }}
-                            >
-                                <MenuItem onClick={handleProfileClick}>
-                                    <Person sx={{ mr: 1 }} />
-                                    My Profile
-                                </MenuItem>
-                                <MenuItem onClick={handleLogout}>
-                                    <Logout sx={{ mr: 1 }} />
-                                    Logout
-                                </MenuItem>
-                            </Menu>
-                        </>
-                    ) : (
-                        <>
-                            <Button
-                                component={Link}
-                                to="/auth/login"
-                                color="inherit"
-                                sx={{
-                                    backgroundColor: isActive("/auth/login") ? "rgba(255, 255, 255, 0.1)" : "transparent",
-                                    "&:hover": {
-                                        backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                    },
-                                }}
-                            >
-                                Login
-                            </Button>
-                            <Button
-                                component={Link}
-                                to="/auth/register"
-                                variant="contained"
-                                sx={{
-                                    backgroundColor: "white",
-                                    color: theme.palette.primary.main,
-                                    "&:hover": {
-                                        backgroundColor: "rgba(255, 255, 255, 0.9)",
-                                    },
-                                }}
-                            >
-                                Register
-                            </Button>
-                        </>
-                    )}
+                        {profileMenuItems.map((item) => (
+                            <MenuItem key={item.label} onClick={item.onClick}>
+                                {item.icon}
+                                {item.label}
+                            </MenuItem>
+                        ))}
+                    </Menu>
                 </Box>
             </Toolbar>
         </AppBar>

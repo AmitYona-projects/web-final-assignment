@@ -16,6 +16,26 @@ const userRouter = Router();
 
 /**
  * @swagger
+ * /users/me:
+ *   get:
+ *     summary: Get the current user
+ *     tags: [Users]
+ *     responses:
+ *       '200':
+ *         description: The current user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       '500':
+ *         $ref: '#/components/responses/InternalServerError'
+ *       '400':
+ *         $ref: '#/components/responses/BadRequestError'
+ */
+userRouter.get("/me", authMiddleware, wrapAuthMiddleware(UserController.getMe));
+
+/**
+ * @swagger
  * /users:
  *   get:
  *     summary: Get all users
@@ -161,25 +181,5 @@ userRouter.put(
  *         $ref: '#/components/responses/BadRequestError'
  */
 userRouter.delete("/:id", authMiddleware, wrapAuthMiddleware(UserController.deleteUserById));
-
-/**
- * @swagger
- * /users/me:
- *   get:
- *     summary: Get the current user
- *     tags: [Users]
- *     responses:
- *       '200':
- *         description: The current user
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       '500':
- *         $ref: '#/components/responses/InternalServerError'
- *       '400':
- *         $ref: '#/components/responses/BadRequestError'
- */
-userRouter.get("/me", authMiddleware, wrapAuthMiddleware(UserController.getMe));
 
 export default userRouter;
