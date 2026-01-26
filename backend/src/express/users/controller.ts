@@ -31,4 +31,8 @@ export class UserController {
 
         res.json(await UserManager.deleteUserById(req.params.id));
     };
+
+    static getMe = async (req: AuthRequest, res: Response) => {
+        res.json(await UserManager.getUserById(req.user._id));
+    };
 }
