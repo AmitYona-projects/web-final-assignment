@@ -31,6 +31,11 @@ export interface AuthResponse {
 }
 
 export const authService = {
+    refreshToken: async (refreshToken: string): Promise<AuthResponse> => {
+        const response = await api.post<AuthResponse>("/auth/refresh-token", { refreshToken });
+        return response.data;
+    },
+
     login: async (data: LoginRequest): Promise<AuthResponse> => {
         const response = await api.post<AuthResponse>("/auth/login", data);
         return response.data;
