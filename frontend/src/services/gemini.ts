@@ -24,20 +24,21 @@ export const geminiService = {
             throw new Error("Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file.");
         }
 
-        const prompt = `Generate a creative cocktail recipe based on this request: "${userPrompt}"
+        const prompt = `תיצור מתכון יצירתי לקוקטייל לפי התיאור הבא "${userPrompt}"
 
-Please provide the response in the following JSON format (without any markdown formatting or code blocks):
+Please provide the response in the following JSON format (without any markdown formatting or code blocks, and only in hebrew):
+
 {
-  "drinkName": "Creative cocktail name",
-  "instructions": "Detailed step-by-step instructions for making the cocktail, including ingredients with measurements and preparation steps",
-  "imagePrompt": "A brief description for generating an image of this cocktail (e.g., 'A tall glass with a vibrant blue cocktail, garnished with mint and lime')"
+  "drinkName": "שם הקוקטייל",
+  "instructions": "מתכון יצירתי לקוקטייל(maximum 950 characters)",
+  "imagePrompt": "קישור לתמונה של קוקטייל בסגנון"
 }
 
 Keep the instructions detailed but concise (100-300 words). Make the cocktail creative and interesting.`;
 
         try {
             const response = await ai.models.generateContent({
-                model: "gemini-2.0-flash-exp",
+                model: "gemini-2.5-flash",
                 contents: prompt,
             });
 
