@@ -37,9 +37,14 @@ export interface UpdatePostRequest {
     drinkImage?: File;
 }
 
+export interface PaginatedPosts {
+    posts: Post[];
+    total: number;
+}
+
 export const postsService = {
-    getAllPosts: async (): Promise<Post[]> => {
-        const response = await api.get("/posts");
+    getAllPosts: async (skip = 0, limit = 10): Promise<PaginatedPosts> => {
+        const response = await api.get(`/posts?skip=${skip}&limit=${limit}`);
         return response.data;
     },
 

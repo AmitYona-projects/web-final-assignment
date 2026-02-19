@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import {
     Box,
     Typography,
@@ -22,12 +22,43 @@ import type React from "react";
 
 const HomePage: React.FC = () => {
     const { user } = useUser();
-    const { posts, isLoading, error, toggleLike, addComment, deleteComment } = useAllPosts();
+    const {
+        posts,
+        total,
+        isLoading,
+        error,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        toggleLike,
+    } = useAllPosts();
 
     const [searchTerm, setSearchTerm] = useState("");
     const [sortBy, setSortBy] = useState<SortOption>("newest");
     const [filterWithLikes, setFilterWithLikes] = useState(false);
     const [filterWithComments, setFilterWithComments] = useState(false);
+
+    const observerRef = useRef<IntersectionObserver | null>(null);
+    const sentinelRef = useCallback(
+        (node: HTMLDivElement | null) => {
+            if (observerRef.current) observerRef.current.disconnect();
+            if (!node) return;
+
+            observerRef.current = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage();
+                }
+            });
+            observerRef.current.observe(node);
+        },
+        [hasNextPage, isFetchingNextPage, fetchNextPage]
+    );
+
+    useEffect(() => {
+        return () => {
+            if (observerRef.current) observerRef.current.disconnect();
+        };
+    }, []);
 
     const filteredAndSortedPosts = useMemo(() => {
         let filtered = [...posts];
@@ -127,7 +158,7 @@ const HomePage: React.FC = () => {
             </Card>
 
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Showing {filteredAndSortedPosts.length} of {posts.length} posts
+                Showing {filteredAndSortedPosts.length} of {total} posts
             </Typography>
 
             {filteredAndSortedPosts.length === 0 ? (
@@ -140,17 +171,16 @@ const HomePage: React.FC = () => {
                                 post={post}
                                 currentUserId={user?._id || ""}
                                 onToggleLike={toggleLike}
-                                onAddComment={(postId, commentText) =>
-                                    addComment({ postId, commentText })
-                                }
-                                onDeleteComment={(postId, commentId) =>
-                                    deleteComment({ postId, commentId })
-                                }
                             />
                         </Grid>
                     ))}
                 </Grid>
             )}
+
+            {/* Infinite scroll sentinel */}
+            <Box ref={sentinelRef} sx={{ py: 2, display: "flex", justifyContent: "center" }}>
+                {isFetchingNextPage && <CircularProgress size={32} />}
+            </Box>
         </Box>
     );
 };

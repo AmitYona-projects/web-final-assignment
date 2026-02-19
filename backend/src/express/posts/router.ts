@@ -1,6 +1,7 @@
 import { Router } from "express";
 import ValidateRequest from "../../utils/express/joi";
 import {
+    getAllPostsSchema,
     createPostSchema,
     deletePostByIdSchema,
     getPostByIdSchema,
@@ -44,7 +45,7 @@ const postRouter = Router();
  *       '400':
  *         $ref: '#/components/responses/BadRequestError'
  */
-postRouter.get("/", wrapController(PostController.getAllPosts));
+postRouter.get("/", ValidateRequest(getAllPostsSchema), wrapController(PostController.getAllPosts));
 
 /**
  * @swagger

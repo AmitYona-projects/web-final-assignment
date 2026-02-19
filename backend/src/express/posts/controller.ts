@@ -3,8 +3,10 @@ import { PostManager } from "./manager";
 import { AuthRequest } from "../auth/interface";
 
 export class PostController {
-    static getAllPosts = async (_req: Request, res: Response) => {
-        res.json(await PostManager.getAllPosts());
+    static getAllPosts = async (req: Request, res: Response) => {
+        const skip = parseInt(req.query.skip as string) || 0;
+        const limit = parseInt(req.query.limit as string) || 10;
+        res.json(await PostManager.getAllPosts(skip, limit));
     };
 
     static getPostById = async (req: Request, res: Response) => {

@@ -4,12 +4,26 @@ import { IComment, IMongoPost, IPost } from "./interface";
 import { PostModel } from "./model";
 
 export class PostManager {
-    static getAllPosts = async (): Promise<IMongoPost[]> => {
-        return PostModel.find().populate("comments.senderId", "username image").lean().exec();
+    static getAllPosts = async (skip = 0, limit = 10): Promise<{ posts: IMongoPost[]; total: number }> => {
+        const [posts, total] = await Promise.all([
+            PostModel.find()
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .populate("comments.senderId", "username image")
+                .lean()
+                .exec(),
+            PostModel.countDocuments(),
+        ]);
+        return { posts, total };
     };
 
     static getPostById = async (id: string): Promise<IMongoPost> => {
-        return PostModel.findById(id).orFail(new DocumentNotFoundError(id)).lean().exec();
+        return PostModel.findById(id)
+            .orFail(new DocumentNotFoundError(id))
+            .populate("comments.senderId", "username image")
+            .lean()
+            .exec();
     };
 
     static getPostsBySenderId = async (senderId: string): Promise<IMongoPost[]> => {

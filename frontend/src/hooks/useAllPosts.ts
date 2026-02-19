@@ -1,15 +1,32 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { postsService } from "../services/posts";
+
+const PAGE_SIZE = 12;
 
 export const ALL_POSTS_QUERY_KEY = ["posts", "all"] as const;
 
 export const useAllPosts = () => {
     const queryClient = useQueryClient();
 
-    const { data: posts = [], isLoading, error } = useQuery({
+    const {
+        data,
+        isLoading,
+        error,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useInfiniteQuery({
         queryKey: ALL_POSTS_QUERY_KEY,
-        queryFn: postsService.getAllPosts,
+        queryFn: ({ pageParam = 0 }) => postsService.getAllPosts(pageParam, PAGE_SIZE),
+        getNextPageParam: (lastPage, allPages) => {
+            const loaded = allPages.reduce((sum, page) => sum + page.posts.length, 0);
+            return loaded < lastPage.total ? loaded : undefined;
+        },
+        initialPageParam: 0,
     });
+
+    const posts = data?.pages.flatMap((page) => page.posts) ?? [];
+    const total = data?.pages[0]?.total ?? 0;
 
     const toggleLikeMutation = useMutation({
         mutationFn: (postId: string) => postsService.toggleLike(postId),
@@ -36,8 +53,12 @@ export const useAllPosts = () => {
 
     return {
         posts,
+        total,
         isLoading,
         error,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
         toggleLike: toggleLikeMutation.mutate,
         addComment: addCommentMutation.mutate,
         deleteComment: deleteCommentMutation.mutate,

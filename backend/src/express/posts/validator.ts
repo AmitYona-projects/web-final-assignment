@@ -1,6 +1,13 @@
 import Joi from "joi";
 import { emptyRequestSchema, MongoIdSchema } from "../../utils/express/joi";
 
+export const getAllPostsSchema = emptyRequestSchema.keys({
+    query: {
+        skip: Joi.number().integer().min(0).optional(),
+        limit: Joi.number().integer().min(1).max(50).optional(),
+    },
+});
+
 export const getPostByIdSchema = emptyRequestSchema.keys({
     params: {
         id: MongoIdSchema.required(),
