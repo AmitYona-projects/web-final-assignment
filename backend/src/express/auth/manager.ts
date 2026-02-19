@@ -2,7 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import { ServerError } from "../../utils/errors";
 import { UserModel } from "../users/model";
 import { ILoginData, IRegisterData, IAuthResponse, ITokenInfo } from "./interface";
-import { comparePasswords, encryptPassword, generateTokens } from "../../utils/auth";
+import { comparePasswords, encryptPassword, generateTokens, verifyRefreshToken } from "../../utils/auth";
 import { OAuth2Client } from "google-auth-library";
 import config from "../../config";
 import { Request } from "express";
@@ -69,8 +69,9 @@ export class AuthManager {
         return { message: "Logout successful" };
     };
 
-    static refreshToken = async (refreshToken: string, userFromToken: ITokenInfo): Promise<IAuthResponse> => {
-        const user = await UserModel.findById(userFromToken._id);
+    static refreshToken = async (refreshToken: string): Promise<IAuthResponse> => {
+        const decoded = verifyRefreshToken(refreshToken);
+        const user = await UserModel.findById(decoded._id);
 
         if (!user) throw new ServerError(StatusCodes.NOT_FOUND, "User not found");
 

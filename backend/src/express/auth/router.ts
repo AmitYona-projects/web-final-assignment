@@ -138,12 +138,7 @@ authRouter.post("/logout", authMiddleware, ValidateRequest(logoutSchema), wrapAu
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-authRouter.post(
-    "/refresh-token",
-    authMiddleware,
-    ValidateRequest(refreshTokenSchema),
-    wrapAuthMiddleware(AuthController.refreshToken)
-);
+authRouter.post("/refresh-token", ValidateRequest(refreshTokenSchema), wrapController(AuthController.refreshToken));
 
 /**
  * @swagger

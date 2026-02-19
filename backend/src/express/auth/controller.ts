@@ -26,9 +26,9 @@ export class AuthController {
         res.json(result);
     };
 
-    static refreshToken = async (req: AuthRequest, res: Response) => {
+    static refreshToken = async (req: Request, res: Response) => {
         const { refreshToken } = req.body;
-        const result = await AuthManager.refreshToken(refreshToken, req.user);
+        const result = await AuthManager.refreshToken(refreshToken);
 
         res.json(result);
     };

@@ -1,9 +1,12 @@
 import axios from "axios";
 import { config } from "../config";
 import { clearTokens } from "../utils/localStorage";
-import { authService } from "./auth";
 
 const api = axios.create({
+    baseURL: config.backendUrl,
+});
+
+const refreshApi = axios.create({
     baseURL: config.backendUrl,
 });
 
@@ -18,16 +21,32 @@ api.interceptors.request.use((req) => {
 api.interceptors.response.use((res) => {
     return res;
 }, async (error) => {
-    const refreshToken = localStorage.getItem(config.refreshTokenStorageKey);
-    if (error.response.status === 401) {
-        clearTokens();
-        const refreshUser = await authService.refreshToken(refreshToken || "");
-        if (refreshUser) {
-            localStorage.setItem(config.accessTokenStorageKey, refreshUser.accessToken);
-            localStorage.setItem(config.refreshTokenStorageKey, refreshUser.refreshToken);
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        const refreshToken = localStorage.getItem(config.refreshTokenStorageKey);
+        if (!refreshToken) {
+            clearTokens();
+            window.location.href = "/auth/login";
+            return Promise.reject(error);
         }
-        window.location.href = "/auth/login";
+
+        try {
+            const { data } = await refreshApi.post("/auth/refresh-token", { refreshToken });
+            localStorage.setItem(config.accessTokenStorageKey, data.accessToken);
+            localStorage.setItem(config.refreshTokenStorageKey, data.refreshToken);
+
+            originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+            return api(originalRequest);
+        } catch {
+            clearTokens();
+            window.location.href = "/auth/login";
+            return Promise.reject(error);
+        }
     }
+
     return Promise.reject(error);
 });
 

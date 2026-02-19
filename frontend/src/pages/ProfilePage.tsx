@@ -25,7 +25,6 @@ const profileSchema = z.object({
         .string()
         .min(3, "Username must be at least 3 characters")
         .max(20, "Username cannot exceed 20 characters")
-        .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
