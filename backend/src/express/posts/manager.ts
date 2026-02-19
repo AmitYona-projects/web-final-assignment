@@ -5,7 +5,7 @@ import { PostModel } from "./model";
 
 export class PostManager {
     static getAllPosts = async (): Promise<IMongoPost[]> => {
-        return PostModel.find().lean().exec();
+        return PostModel.find().populate("comments.senderId", "username image").lean().exec();
     };
 
     static getPostById = async (id: string): Promise<IMongoPost> => {
@@ -66,6 +66,7 @@ export class PostManager {
     static addComment = async (postId: string, senderId: string, commentText: string): Promise<IMongoPost> => {
         return PostModel.findByIdAndUpdate(postId, { $push: { comments: { senderId, commentText } } }, { new: true })
             .orFail(new DocumentNotFoundError(postId))
+            .populate("comments.senderId", "username image")
             .lean()
             .exec();
     };
@@ -84,6 +85,7 @@ export class PostManager {
 
         return PostModel.findByIdAndUpdate(postId, { $pull: { comments: { _id: commentId } } }, { new: true })
             .orFail(new DocumentNotFoundError(postId))
+            .populate("comments.senderId", "username image")
             .lean()
             .exec();
     };

@@ -12,9 +12,15 @@ export interface Post {
     updatedAt: string;
 }
 
+export interface CommentSender {
+    _id: string;
+    username: string;
+    image?: string;
+}
+
 export interface Comment {
     _id: string;
-    senderId: string;
+    senderId: CommentSender;
     commentText: string;
     createdAt: string;
 }

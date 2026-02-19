@@ -133,9 +133,9 @@ const HomePage: React.FC = () => {
             {filteredAndSortedPosts.length === 0 ? (
                 <EmptyState hasPosts={posts.length > 0} hasFilters={hasActiveFilters} />
             ) : (
-                <Grid container spacing={3}>
+                <Grid container spacing={3} alignItems="flex-start">
                     {filteredAndSortedPosts.map((post) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={post._id}>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }} key={post._id}>
                             <FeedPostCard
                                 post={post}
                                 currentUserId={user?._id || ""}

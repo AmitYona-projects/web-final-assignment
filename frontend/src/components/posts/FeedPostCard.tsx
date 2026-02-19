@@ -12,7 +12,9 @@ import {
     Collapse,
     List,
     ListItem,
+    ListItemAvatar,
     ListItemText,
+    Avatar,
     Divider,
 } from "@mui/material";
 import {
@@ -42,6 +44,7 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({
     onDeleteComment,
 }) => {
     const [showComments, setShowComments] = useState(false);
+    const [expanded, setExpanded] = useState(false);
     const [commentText, setCommentText] = useState("");
 
     const hasLiked = post.likes.includes(currentUserId);
@@ -61,7 +64,7 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({
     };
 
     return (
-        <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+        <Card sx={{ display: "flex", flexDirection: "column", minHeight: 410 }}>
             {post.drinkImage && (
                 <CardMedia
                     component="img"
@@ -79,15 +82,26 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({
                     variant="body2"
                     color="text.secondary"
                     sx={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: "vertical",
+                        ...(!expanded && {
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: "vertical",
+                        }),
                     }}
                 >
                     {post.instructions}
                 </Typography>
+                {post.instructions.length > 120 && (
+                    <Button
+                        size="small"
+                        onClick={() => setExpanded(!expanded)}
+                        sx={{ p: 0, minWidth: "auto", textTransform: "none" }}
+                    >
+                        {expanded ? "Show less" : "Read more"}
+                    </Button>
+                )}
             </CardContent>
 
             <CardActions sx={{ px: 2, justifyContent: "space-between" }}>
@@ -127,7 +141,7 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({
                                     key={comment._id}
                                     disableGutters
                                     secondaryAction={
-                                        (comment.senderId === currentUserId || post.owner === currentUserId) && (
+                                        (comment.senderId._id === currentUserId || post.owner === currentUserId) && (
                                             <IconButton
                                                 edge="end"
                                                 size="small"
@@ -139,8 +153,25 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({
                                         )
                                     }
                                 >
+                                    <ListItemAvatar sx={{ minWidth: 40 }}>
+                                        <Avatar
+                                            src={comment.senderId.image ? `${config.uploadFolderUrl}${comment.senderId.image}` : undefined}
+                                            sx={{ width: 28, height: 28 }}
+                                        >
+                                            {comment.senderId.username?.[0]?.toUpperCase()}
+                                        </Avatar>
+                                    </ListItemAvatar>
                                     <ListItemText
-                                        primary={comment.commentText}
+                                        primary={
+                                            <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
+                                                <Typography variant="subtitle2" component="span">
+                                                    {comment.senderId.username}
+                                                </Typography>
+                                                <Typography variant="body2" component="span">
+                                                    {comment.commentText}
+                                                </Typography>
+                                            </Box>
+                                        }
                                         secondary={new Date(comment.createdAt).toLocaleDateString()}
                                     />
                                 </ListItem>
