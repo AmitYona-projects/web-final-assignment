@@ -34,4 +34,16 @@ export class PostController {
     static deletePostById = async (req: AuthRequest, res: Response) => {
         res.json(await PostManager.deletePostById(req.params.id, req.user._id));
     };
+
+    static toggleLike = async (req: AuthRequest, res: Response) => {
+        res.json(await PostManager.toggleLike(req.params.id, req.user._id));
+    };
+
+    static addComment = async (req: AuthRequest, res: Response) => {
+        res.status(201).json(await PostManager.addComment(req.params.id, req.user._id, req.body.commentText));
+    };
+
+    static deleteComment = async (req: AuthRequest, res: Response) => {
+        res.json(await PostManager.deleteComment(req.params.id, req.params.commentId, req.user._id));
+    };
 }

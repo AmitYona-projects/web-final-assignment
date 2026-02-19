@@ -1,6 +1,7 @@
 import { Document, Types } from "mongoose";
 
 export interface IComment {
+    _id?: Types.ObjectId;
     senderId: Types.ObjectId;
     commentText: string;
     createdAt: Date;

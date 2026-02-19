@@ -6,6 +6,9 @@ import {
     getPostByIdSchema,
     getPostsBySenderIdSchema,
     updatePostSchema,
+    toggleLikeSchema,
+    addCommentSchema,
+    deleteCommentSchema,
 } from "./validator";
 import { PostController } from "./controller";
 import { wrapAuthMiddleware, wrapController } from "../../utils/express/middlewares";
@@ -205,6 +208,27 @@ postRouter.delete(
     authMiddleware,
     ValidateRequest(deletePostByIdSchema),
     wrapAuthMiddleware(PostController.deletePostById)
+);
+
+postRouter.post(
+    "/:id/like",
+    authMiddleware,
+    ValidateRequest(toggleLikeSchema),
+    wrapAuthMiddleware(PostController.toggleLike)
+);
+
+postRouter.post(
+    "/:id/comments",
+    authMiddleware,
+    ValidateRequest(addCommentSchema),
+    wrapAuthMiddleware(PostController.addComment)
+);
+
+postRouter.delete(
+    "/:id/comments/:commentId",
+    authMiddleware,
+    ValidateRequest(deleteCommentSchema),
+    wrapAuthMiddleware(PostController.deleteComment)
 );
 
 export default postRouter;

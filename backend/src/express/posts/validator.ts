@@ -35,3 +35,25 @@ export const deletePostByIdSchema = emptyRequestSchema.keys({
         id: MongoIdSchema.required(),
     },
 });
+
+export const toggleLikeSchema = emptyRequestSchema.keys({
+    params: {
+        id: MongoIdSchema.required(),
+    },
+});
+
+export const addCommentSchema = emptyRequestSchema.keys({
+    params: {
+        id: MongoIdSchema.required(),
+    },
+    body: {
+        commentText: Joi.string().min(1).max(500).required(),
+    },
+});
+
+export const deleteCommentSchema = emptyRequestSchema.keys({
+    params: {
+        id: MongoIdSchema.required(),
+        commentId: MongoIdSchema.required(),
+    },
+});
