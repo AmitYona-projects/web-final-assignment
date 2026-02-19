@@ -20,6 +20,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import type React from "react";
 import { useAuth } from "../hooks/useAuth";
+import { useUser } from "../hooks/useUser";
+import { config } from "../config";
 
 
 
@@ -27,6 +29,7 @@ const Header: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { logout } = useAuth();
+    const { user } = useUser();
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -97,8 +100,11 @@ const Header: React.FC = () => {
                         </Button>
                     ))}
                     <IconButton onClick={handleMenuOpen} color="inherit" sx={{ ml: 1 }}>
-                        <Avatar sx={{ width: 32, height: 32, bgcolor: "secondary.main" }}>
-                            <AccountCircle />
+                        <Avatar
+                            src={user?.image ? `${config.uploadFolderUrl}${user.image}` : undefined}
+                            sx={{ width: 32, height: 32, bgcolor: "secondary.main" }}
+                        >
+                            {!user?.image && <AccountCircle />}
                         </Avatar>
                     </IconButton>
                     <Menu

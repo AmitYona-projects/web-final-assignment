@@ -6,11 +6,10 @@ import { initializeMongo } from "./utils/mongo";
 const main = async () => {
     await initializeMongo();
 
-    const server = new Server(config.server.port);
+    const port = config.nodeEnv === "production" ? config.server.httpsPort : config.server.port;
+    const server = new Server(port);
 
     await server.start();
-
-    logger.info(`Server started on port: ${config.server.port}`);
 };
 
 main().catch(logger.error);

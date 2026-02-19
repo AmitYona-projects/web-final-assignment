@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,8 +12,12 @@ import {
     CardContent,
     Stack,
     CircularProgress,
+    Avatar,
+    IconButton,
 } from "@mui/material";
+import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import { useUser } from "../hooks/useUser";
+import { config } from "../config";
 import type React from "react";
 
 const profileSchema = z.object({
@@ -27,6 +32,8 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 const ProfilePage: React.FC = () => {
     const { user, isLoading, error, updateUser, isUpdating, updateError, updateSuccess } = useUser();
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const {
         control,
@@ -39,8 +46,25 @@ const ProfilePage: React.FC = () => {
         },
     });
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+    const getAvatarSrc = () => {
+        if (imagePreview) return imagePreview;
+        if (user?.image) return `${config.uploadFolderUrl}${user.image}`;
+        return undefined;
+    };
+
     const onSubmit = (data: ProfileFormData) => {
-        updateUser(data);
+        updateUser({
+            ...data,
+            ...(imageFile && { image: imageFile }),
+        });
     };
 
     if (isLoading) {
@@ -82,7 +106,35 @@ const ProfilePage: React.FC = () => {
             <Card>
                 <CardContent>
                     <form onSubmit={handleSubmit(onSubmit)}>
-                        <Stack spacing={3}>
+                        <Stack spacing={3} alignItems="center">
+                            <Box sx={{ position: "relative" }}>
+                                <Avatar
+                                    src={getAvatarSrc()}
+                                    sx={{ width: 120, height: 120 }}
+                                />
+                                <IconButton
+                                    component="label"
+                                    sx={{
+                                        position: "absolute",
+                                        bottom: -4,
+                                        right: -4,
+                                        bgcolor: "primary.main",
+                                        color: "white",
+                                        "&:hover": { bgcolor: "primary.dark" },
+                                        width: 36,
+                                        height: 36,
+                                    }}
+                                >
+                                    <PhotoCamera fontSize="small" />
+                                    <input
+                                        type="file"
+                                        hidden
+                                        accept="image/png,image/jpeg,image/jpg"
+                                        onChange={handleImageChange}
+                                    />
+                                </IconButton>
+                            </Box>
+
                             <TextField
                                 label="Email"
                                 value={user.email}
@@ -109,6 +161,7 @@ const ProfilePage: React.FC = () => {
                                 type="submit"
                                 variant="contained"
                                 size="large"
+                                fullWidth
                                 disabled={isUpdating}
                             >
                                 {isUpdating ? "Saving..." : "Save Changes"}

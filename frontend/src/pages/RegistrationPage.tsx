@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,7 +11,10 @@ import {
     Link,
     Stack,
     Divider,
+    Avatar,
+    IconButton,
 } from "@mui/material";
+import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import { Link as RouterLink } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { GoogleLogin } from "@react-oauth/google";
@@ -35,6 +39,8 @@ type RegistrationFormData = z.infer<typeof registrationSchema>;
 
 const RegistrationPage: React.FC = () => {
     const { register: registerMutation, googleLogin } = useAuth();
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const {
         control,
@@ -49,8 +55,19 @@ const RegistrationPage: React.FC = () => {
         },
     });
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
     const onSubmit = async (data: RegistrationFormData) => {
-        registerMutation.mutate(data);
+        registerMutation.mutate({
+            ...data,
+            ...(imageFile && { image: imageFile }),
+        });
     };
 
     return (
@@ -69,6 +86,36 @@ const RegistrationPage: React.FC = () => {
             )}
 
             <form onSubmit={handleSubmit(onSubmit)}>
+                <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+                    <Box sx={{ position: "relative" }}>
+                        <Avatar
+                            src={imagePreview || undefined}
+                            sx={{ width: 100, height: 100 }}
+                        />
+                        <IconButton
+                            component="label"
+                            sx={{
+                                position: "absolute",
+                                bottom: -4,
+                                right: -4,
+                                bgcolor: "primary.main",
+                                color: "white",
+                                "&:hover": { bgcolor: "primary.dark" },
+                                width: 36,
+                                height: 36,
+                            }}
+                        >
+                            <PhotoCamera fontSize="small" />
+                            <input
+                                type="file"
+                                hidden
+                                accept="image/png,image/jpeg,image/jpg"
+                                onChange={handleImageChange}
+                            />
+                        </IconButton>
+                    </Box>
+                </Box>
+
                 <Controller
                     name="username"
                     control={control}

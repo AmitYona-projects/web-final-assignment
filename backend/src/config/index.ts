@@ -2,8 +2,10 @@ import env from "env-var";
 import "./dotenv";
 
 const config = {
+    nodeEnv: env.get("NODE_ENV").default("development").asString(),
     server: {
         port: env.get("SERVER_PORT").default(3000).asPortNumber(),
+        httpsPort: env.get("HTTPS_PORT").default(443).asPortNumber(),
         swaggerUrl: env.get("SWAGGER_URL").default("/api-docs").asString(),
     },
     mongo: {
