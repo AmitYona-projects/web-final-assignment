@@ -11,6 +11,7 @@ import {
 import { Edit as EditIcon, Delete as DeleteIcon, Favorite as FavoriteIcon, Comment as CommentIcon } from "@mui/icons-material";
 import type React from "react";
 import type { Post } from "../../services/posts";
+import { config } from "../../config";
 
 export interface PostCardProps {
     post: Post;
@@ -24,7 +25,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onEdit, onDelete }) => {
             <CardMedia
                 component="img"
                 height="200"
-                image={post.drinkImage}
+                image={post.drinkImage ? `${config.uploadFolderUrl}${post.drinkImage}` : undefined}
                 alt={post.drinkName}
                 sx={{ objectFit: "cover" }}
             />
