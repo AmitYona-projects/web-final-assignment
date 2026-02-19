@@ -4,6 +4,7 @@ import { loginSchema, logoutSchema, refreshTokenSchema, registerSchema } from ".
 import { wrapAuthMiddleware, wrapController } from "../../utils/express/middlewares";
 import { AuthController } from "./controller";
 import { authMiddleware } from "./middleware";
+import { upload } from "../../utils/upload";
 
 const authRouter = Router();
 
@@ -42,7 +43,12 @@ const authRouter = Router();
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-authRouter.post("/register", ValidateRequest(registerSchema), wrapController(AuthController.register));
+authRouter.post(
+    "/register",
+    upload.single("image"),
+    ValidateRequest(registerSchema),
+    wrapController(AuthController.register)
+);
 
 /**
  * @swagger
@@ -132,12 +138,7 @@ authRouter.post("/logout", authMiddleware, ValidateRequest(logoutSchema), wrapAu
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-authRouter.post(
-    "/refresh-token",
-    authMiddleware,
-    ValidateRequest(refreshTokenSchema),
-    wrapAuthMiddleware(AuthController.refreshToken)
-);
+authRouter.post("/refresh-token", ValidateRequest(refreshTokenSchema), wrapController(AuthController.refreshToken));
 
 /**
  * @swagger

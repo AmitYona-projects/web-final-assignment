@@ -13,7 +13,7 @@ export class PostManager {
     };
 
     static getPostsBySenderId = async (senderId: string): Promise<IMongoPost[]> => {
-        return PostModel.find({ owner: senderId }).orFail(new DocumentNotFoundError(senderId)).lean().exec();
+        return PostModel.find({ owner: senderId }).lean().exec();
     };
 
     static createPost = async (post: IPost, senderId: string): Promise<IMongoPost> => {

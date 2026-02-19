@@ -30,6 +30,10 @@ export const verifyAccessToken = (token: string): ITokenInfo => {
     return jwt.verify(token, jwtSecret) as ITokenInfo;
 };
 
+export const verifyRefreshToken = (token: string): ITokenInfo => {
+    return jwt.verify(token, jwtRefreshSecret) as ITokenInfo;
+};
+
 export const encryptPassword = async (password: string): Promise<string> => {
     const salt = await bcrypt.genSalt(saltRounds);
     return bcrypt.hash(password, salt);

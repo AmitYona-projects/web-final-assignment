@@ -10,7 +10,11 @@ export class AuthController {
     };
 
     static register = async (req: Request, res: Response) => {
-        const result = await AuthManager.register(req.body);
+        const registerData = {
+            ...req.body,
+            ...(req.file && { image: req.file.filename }),
+        };
+        const result = await AuthManager.register(registerData);
 
         res.status(201).json(result);
     };
@@ -22,9 +26,9 @@ export class AuthController {
         res.json(result);
     };
 
-    static refreshToken = async (req: AuthRequest, res: Response) => {
+    static refreshToken = async (req: Request, res: Response) => {
         const { refreshToken } = req.body;
-        const result = await AuthManager.refreshToken(refreshToken, req.user);
+        const result = await AuthManager.refreshToken(refreshToken);
 
         res.json(result);
     };

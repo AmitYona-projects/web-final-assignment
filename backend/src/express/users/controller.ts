@@ -21,7 +21,11 @@ export class UserController {
             throw new ServerError(StatusCodes.FORBIDDEN, "You are not allowed to update this user");
         }
 
-        res.json(await UserManager.updateUserById(req.params.id, req.body));
+        const updateData = {
+            ...req.body,
+            ...(req.file && { image: req.file.filename }),
+        };
+        res.json(await UserManager.updateUserById(req.params.id, updateData));
     };
 
     static deleteUserById = async (req: AuthRequest, res: Response) => {
@@ -30,5 +34,9 @@ export class UserController {
         }
 
         res.json(await UserManager.deleteUserById(req.params.id));
+    };
+
+    static getMe = async (req: AuthRequest, res: Response) => {
+        res.json(await UserManager.getUserById(req.user._id));
     };
 }

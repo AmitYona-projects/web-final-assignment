@@ -4,6 +4,7 @@ import { createUserSchema, getUserByIdSchema, updateUserSchema } from "./validat
 import { UserController } from "./controller";
 import { wrapAuthMiddleware, wrapController } from "../../utils/express/middlewares";
 import { authMiddleware } from "../auth/middleware";
+import { upload } from "../../utils/upload";
 
 const userRouter = Router();
 
@@ -13,6 +14,26 @@ const userRouter = Router();
  *   name: Users
  *   description: API endpoints for users
  */
+
+/**
+ * @swagger
+ * /users/me:
+ *   get:
+ *     summary: Get the current user
+ *     tags: [Users]
+ *     responses:
+ *       '200':
+ *         description: The current user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       '500':
+ *         $ref: '#/components/responses/InternalServerError'
+ *       '400':
+ *         $ref: '#/components/responses/BadRequestError'
+ */
+userRouter.get("/me", authMiddleware, wrapAuthMiddleware(UserController.getMe));
 
 /**
  * @swagger
@@ -125,6 +146,7 @@ userRouter.post("/", ValidateRequest(createUserSchema), wrapController(UserContr
 userRouter.put(
     "/:id",
     authMiddleware,
+    upload.single("image"),
     ValidateRequest(updateUserSchema),
     wrapAuthMiddleware(UserController.updateUser)
 );
