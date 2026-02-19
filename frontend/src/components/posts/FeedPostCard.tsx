@@ -7,23 +7,14 @@ import {
     Typography,
     Box,
     IconButton,
-    TextField,
     Button,
-    Collapse,
-    List,
-    ListItem,
-    ListItemAvatar,
-    ListItemText,
-    Avatar,
-    Divider,
 } from "@mui/material";
 import {
     Favorite as FavoriteIcon,
     FavoriteBorder as FavoriteBorderIcon,
     Comment as CommentIcon,
-    Delete as DeleteIcon,
-    Send as SendIcon,
 } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import type React from "react";
 import type { Post } from "../../services/posts";
 import { config } from "../../config";
@@ -32,36 +23,17 @@ export interface FeedPostCardProps {
     post: Post;
     currentUserId: string;
     onToggleLike: (postId: string) => void;
-    onAddComment: (postId: string, commentText: string) => void;
-    onDeleteComment: (postId: string, commentId: string) => void;
 }
 
 const FeedPostCard: React.FC<FeedPostCardProps> = ({
     post,
     currentUserId,
     onToggleLike,
-    onAddComment,
-    onDeleteComment,
 }) => {
-    const [showComments, setShowComments] = useState(false);
     const [expanded, setExpanded] = useState(false);
-    const [commentText, setCommentText] = useState("");
+    const navigate = useNavigate();
 
     const hasLiked = post.likes.includes(currentUserId);
-
-    const handleAddComment = () => {
-        if (commentText.trim()) {
-            onAddComment(post._id, commentText.trim());
-            setCommentText("");
-        }
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleAddComment();
-        }
-    };
 
     return (
         <Card sx={{ display: "flex", flexDirection: "column", minHeight: 410 }}>
@@ -119,8 +91,7 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <IconButton
-                        onClick={() => setShowComments(!showComments)}
-                        color={showComments ? "primary" : "default"}
+                        onClick={() => navigate(`/posts/${post._id}`)}
                         aria-label="comments"
                     >
                         <CommentIcon />
@@ -130,76 +101,6 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({
                     </Typography>
                 </Box>
             </CardActions>
-
-            <Collapse in={showComments}>
-                <Divider />
-                <Box sx={{ px: 2, py: 1 }}>
-                    {post.comments.length > 0 && (
-                        <List dense disablePadding>
-                            {post.comments.map((comment) => (
-                                <ListItem
-                                    key={comment._id}
-                                    disableGutters
-                                    secondaryAction={
-                                        (comment.senderId._id === currentUserId || post.owner === currentUserId) && (
-                                            <IconButton
-                                                edge="end"
-                                                size="small"
-                                                onClick={() => onDeleteComment(post._id, comment._id)}
-                                                aria-label="delete comment"
-                                            >
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                        )
-                                    }
-                                >
-                                    <ListItemAvatar sx={{ minWidth: 40 }}>
-                                        <Avatar
-                                            src={comment.senderId.image ? `${config.uploadFolderUrl}${comment.senderId.image}` : undefined}
-                                            sx={{ width: 28, height: 28 }}
-                                        >
-                                            {comment.senderId.username?.[0]?.toUpperCase()}
-                                        </Avatar>
-                                    </ListItemAvatar>
-                                    <ListItemText
-                                        primary={
-                                            <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
-                                                <Typography variant="subtitle2" component="span">
-                                                    {comment.senderId.username}
-                                                </Typography>
-                                                <Typography variant="body2" component="span">
-                                                    {comment.commentText}
-                                                </Typography>
-                                            </Box>
-                                        }
-                                        secondary={new Date(comment.createdAt).toLocaleDateString()}
-                                    />
-                                </ListItem>
-                            ))}
-                        </List>
-                    )}
-
-                    <Box sx={{ display: "flex", gap: 1, mt: 1, mb: 1 }}>
-                        <TextField
-                            size="small"
-                            fullWidth
-                            placeholder="Add a comment..."
-                            value={commentText}
-                            onChange={(e) => setCommentText(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                        />
-                        <Button
-                            variant="contained"
-                            size="small"
-                            onClick={handleAddComment}
-                            disabled={!commentText.trim()}
-                            sx={{ minWidth: "auto", px: 2 }}
-                        >
-                            <SendIcon fontSize="small" />
-                        </Button>
-                    </Box>
-                </Box>
-            </Collapse>
         </Card>
     );
 };

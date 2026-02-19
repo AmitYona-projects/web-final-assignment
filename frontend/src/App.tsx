@@ -8,6 +8,7 @@ import ProfilePage from './pages/ProfilePage'
 import AppLayout from './layouts/AppLayout'
 import AuthRequired from './components/AuthRequired'
 import MyPostsPage from './pages/MyPostsPage'
+import PostDetailPage from './pages/PostDetailPage'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path='profile' element={<ProfilePage />} />
         <Route path='posts/my' element={<MyPostsPage />} />
+        <Route path='posts/:id' element={<PostDetailPage />} />
       </Route>
       <Route path='/auth' element={<AuthLayout />}>
         <Route index element={<Navigate to='login' />} />
