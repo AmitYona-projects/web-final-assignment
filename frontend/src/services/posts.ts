@@ -21,13 +21,13 @@ export interface Comment {
 export interface CreatePostRequest {
     drinkName: string;
     instructions: string;
-    drinkImage: string;
+    drinkImage?: File;
 }
 
 export interface UpdatePostRequest {
     drinkName?: string;
     instructions?: string;
-    drinkImage?: string;
+    drinkImage?: File;
 }
 
 export const postsService = {
@@ -47,12 +47,26 @@ export const postsService = {
     },
 
     createPost: async (data: CreatePostRequest): Promise<Post> => {
-        const response = await api.post("/posts", data);
+        const formData = new FormData();
+        formData.append("drinkName", data.drinkName);
+        formData.append("instructions", data.instructions);
+        if (data.drinkImage) formData.append("drinkImage", data.drinkImage);
+
+        const response = await api.post("/posts", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
         return response.data;
     },
 
     updatePost: async (id: string, data: UpdatePostRequest): Promise<Post> => {
-        const response = await api.put(`/posts/${id}`, data);
+        const formData = new FormData();
+        if (data.drinkName) formData.append("drinkName", data.drinkName);
+        if (data.instructions) formData.append("instructions", data.instructions);
+        if (data.drinkImage) formData.append("drinkImage", data.drinkImage);
+
+        const response = await api.put(`/posts/${id}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
         return response.data;
     },
 

@@ -14,17 +14,17 @@ export interface PostDialogProps {
     onSubmit: (data: PostFormData) => void;
     post?: Post | null;
     isSubmitting: boolean;
-    // Form control from parent
     control: Control<PostFormData>;
     handleSubmit: UseFormHandleSubmit<PostFormData>;
     errors: FieldErrors<PostFormData>;
-    // AI Generation props
     aiPrompt: string;
     onAiPromptChange: (prompt: string) => void;
     onGenerateWithAI: () => void;
     isGenerating: boolean;
     aiError: string | null;
     onAiErrorDismiss: () => void;
+    imagePreview?: string;
+    onImageChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const PostDialog: React.FC<PostDialogProps> = ({
@@ -42,6 +42,8 @@ const PostDialog: React.FC<PostDialogProps> = ({
     isGenerating,
     aiError,
     onAiErrorDismiss,
+    imagePreview,
+    onImageChange,
 }) => {
     const isEditMode = !!post;
 
@@ -72,7 +74,13 @@ const PostDialog: React.FC<PostDialogProps> = ({
                             </>
                         )}
 
-                        <PostForm control={control} errors={errors} disabled={isSubmitting} />
+                        <PostForm
+                            control={control}
+                            errors={errors}
+                            disabled={isSubmitting}
+                            imagePreview={imagePreview}
+                            onImageChange={onImageChange}
+                        />
                     </Stack>
                 </DialogContent>
                 <DialogActions>

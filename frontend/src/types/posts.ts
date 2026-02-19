@@ -9,7 +9,6 @@ export const postSchema = z.object({
         .string()
         .min(10, "Instructions must be at least 10 characters")
         .max(1000, "Instructions cannot exceed 1000 characters"),
-    drinkImage: z.string().url("Must be a valid URL"),
 });
 
 export type PostFormData = z.infer<typeof postSchema>;
