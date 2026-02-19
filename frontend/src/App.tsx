@@ -11,6 +11,7 @@ import MyPostsPage from './pages/MyPostsPage'
 
 function App() {
   return (
+    
     <Routes>
       <Route
         path='/'
