@@ -2,6 +2,7 @@ import { once } from "events";
 import express from "express";
 import helmet from "helmet";
 import http from "http";
+import path from "path";
 import cors from "cors";
 import { errorMiddleware } from "../utils/express/middlewares";
 import { loggerMiddleware } from "../utils/logger/middleware";
@@ -24,6 +25,8 @@ export class Server {
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
         app.use(cors());
+
+        app.use("/uploads", express.static(path.resolve(__dirname, "../..", "public/uploads")));
 
         app.use(loggerMiddleware);
         app.use(appRouter);

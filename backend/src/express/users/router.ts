@@ -4,6 +4,7 @@ import { createUserSchema, getUserByIdSchema, updateUserSchema } from "./validat
 import { UserController } from "./controller";
 import { wrapAuthMiddleware, wrapController } from "../../utils/express/middlewares";
 import { authMiddleware } from "../auth/middleware";
+import { upload } from "../../utils/upload";
 
 const userRouter = Router();
 
@@ -145,6 +146,7 @@ userRouter.post("/", ValidateRequest(createUserSchema), wrapController(UserContr
 userRouter.put(
     "/:id",
     authMiddleware,
+    upload.single("image"),
     ValidateRequest(updateUserSchema),
     wrapAuthMiddleware(UserController.updateUser)
 );

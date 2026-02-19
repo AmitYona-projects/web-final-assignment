@@ -16,7 +16,7 @@ const client = new OAuth2Client(
 
 export class AuthManager {
     static register = async (registerData: IRegisterData): Promise<IAuthResponse> => {
-        const { email, password, username } = registerData;
+        const { email, password, username, image } = registerData;
         const existingUser = await UserModel.findOne({ email });
 
         if (existingUser) {
@@ -28,6 +28,7 @@ export class AuthManager {
             email,
             username,
             password: encryptedPassword,
+            ...(image && { image }),
             refreshTokens: [],
         });
         const { accessToken, refreshToken } = generateTokens(newUser._id.toString());

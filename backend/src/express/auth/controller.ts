@@ -10,7 +10,11 @@ export class AuthController {
     };
 
     static register = async (req: Request, res: Response) => {
-        const result = await AuthManager.register(req.body);
+        const registerData = {
+            ...req.body,
+            ...(req.file && { image: req.file.filename }),
+        };
+        const result = await AuthManager.register(registerData);
 
         res.status(201).json(result);
     };

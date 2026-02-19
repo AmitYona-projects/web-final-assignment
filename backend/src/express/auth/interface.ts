@@ -10,6 +10,7 @@ export interface IRegisterData {
     email: string;
     password: string;
     username: string;
+    image?: string;
 }
 
 export interface ILogoutData {
