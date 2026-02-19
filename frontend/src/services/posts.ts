@@ -13,6 +13,7 @@ export interface Post {
 }
 
 export interface Comment {
+    _id: string;
     senderId: string;
     commentText: string;
     createdAt: string;
@@ -72,5 +73,20 @@ export const postsService = {
 
     deletePost: async (id: string): Promise<void> => {
         await api.delete(`/posts/${id}`);
+    },
+
+    toggleLike: async (postId: string): Promise<Post> => {
+        const response = await api.post(`/posts/${postId}/like`);
+        return response.data;
+    },
+
+    addComment: async (postId: string, commentText: string): Promise<Post> => {
+        const response = await api.post(`/posts/${postId}/comments`, { commentText });
+        return response.data;
+    },
+
+    deleteComment: async (postId: string, commentId: string): Promise<Post> => {
+        const response = await api.delete(`/posts/${postId}/comments/${commentId}`);
+        return response.data;
     },
 };

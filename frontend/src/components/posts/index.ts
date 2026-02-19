@@ -1,4 +1,5 @@
 export { default as PostCard } from "./PostCard";
+export { default as FeedPostCard } from "./FeedPostCard";
 export { default as SearchBar } from "./SearchBar";
 export { default as PostFilters } from "./PostFilters";
 export { default as PostDialog } from "./PostDialog";
@@ -8,6 +9,7 @@ export { default as PostForm } from "./PostForm";
 export { default as EmptyState } from "./EmptyState";
 
 export type { PostCardProps } from "./PostCard";
+export type { FeedPostCardProps } from "./FeedPostCard";
 export type { SearchBarProps } from "./SearchBar";
 export type { PostFiltersProps } from "./PostFilters";
 export type { PostDialogProps } from "./PostDialog";
