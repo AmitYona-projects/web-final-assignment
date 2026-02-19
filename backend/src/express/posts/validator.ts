@@ -17,7 +17,6 @@ export const createPostSchema = emptyRequestSchema.keys({
     body: {
         drinkName: Joi.string().required(),
         instructions: Joi.string().required(),
-        drinkImage: Joi.string().optional(),
     },
 });
 
@@ -25,7 +24,6 @@ export const updatePostSchema = emptyRequestSchema.keys({
     body: {
         drinkName: Joi.string().optional(),
         instructions: Joi.string().optional(),
-        drinkImage: Joi.string().optional(),
     },
     params: {
         id: MongoIdSchema.required(),

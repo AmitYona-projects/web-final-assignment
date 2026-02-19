@@ -10,6 +10,7 @@ import {
 import { PostController } from "./controller";
 import { wrapAuthMiddleware, wrapController } from "../../utils/express/middlewares";
 import { authMiddleware } from "../auth/middleware";
+import { upload } from "../../utils/upload";
 
 const postRouter = Router();
 
@@ -122,7 +123,13 @@ postRouter.get("/:id", ValidateRequest(getPostByIdSchema), wrapController(PostCo
  *       '500':
  *         $ref: '#/components/responses/InternalServerError'
  */
-postRouter.post("/", authMiddleware, ValidateRequest(createPostSchema), wrapAuthMiddleware(PostController.createPost));
+postRouter.post(
+    "/",
+    authMiddleware,
+    upload.single("drinkImage"),
+    ValidateRequest(createPostSchema),
+    wrapAuthMiddleware(PostController.createPost)
+);
 
 /**
  * @swagger
@@ -159,6 +166,7 @@ postRouter.post("/", authMiddleware, ValidateRequest(createPostSchema), wrapAuth
 postRouter.put(
     "/:id",
     authMiddleware,
+    upload.single("drinkImage"),
     ValidateRequest(updatePostSchema),
     wrapAuthMiddleware(PostController.updatePost)
 );

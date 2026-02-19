@@ -16,11 +16,19 @@ export class PostController {
     };
 
     static createPost = async (req: AuthRequest, res: Response) => {
-        res.status(201).json(await PostManager.createPost(req.body, req.user._id));
+        const postData = {
+            ...req.body,
+            ...(req.file && { drinkImage: req.file.filename }),
+        };
+        res.status(201).json(await PostManager.createPost(postData, req.user._id));
     };
 
     static updatePost = async (req: AuthRequest, res: Response) => {
-        res.json(await PostManager.updatePostById(req.params.id, req.body, req.user._id));
+        const updateData = {
+            ...req.body,
+            ...(req.file && { drinkImage: req.file.filename }),
+        };
+        res.json(await PostManager.updatePostById(req.params.id, updateData, req.user._id));
     };
 
     static deletePostById = async (req: AuthRequest, res: Response) => {
