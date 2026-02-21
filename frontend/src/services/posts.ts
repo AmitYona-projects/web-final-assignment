@@ -12,8 +12,15 @@ export interface Post {
     updatedAt: string;
 }
 
+export interface CommentSender {
+    _id: string;
+    username: string;
+    image?: string;
+}
+
 export interface Comment {
-    senderId: string;
+    _id: string;
+    senderId: CommentSender;
     commentText: string;
     createdAt: string;
 }
@@ -21,18 +28,23 @@ export interface Comment {
 export interface CreatePostRequest {
     drinkName: string;
     instructions: string;
-    drinkImage: string;
+    drinkImage?: File;
 }
 
 export interface UpdatePostRequest {
     drinkName?: string;
     instructions?: string;
-    drinkImage?: string;
+    drinkImage?: File;
+}
+
+export interface PaginatedPosts {
+    posts: Post[];
+    total: number;
 }
 
 export const postsService = {
-    getAllPosts: async (): Promise<Post[]> => {
-        const response = await api.get("/posts");
+    getAllPosts: async (skip = 0, limit = 10): Promise<PaginatedPosts> => {
+        const response = await api.get(`/posts?skip=${skip}&limit=${limit}`);
         return response.data;
     },
 
@@ -47,16 +59,45 @@ export const postsService = {
     },
 
     createPost: async (data: CreatePostRequest): Promise<Post> => {
-        const response = await api.post("/posts", data);
+        const formData = new FormData();
+        formData.append("drinkName", data.drinkName);
+        formData.append("instructions", data.instructions);
+        if (data.drinkImage) formData.append("drinkImage", data.drinkImage);
+
+        const response = await api.post("/posts", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
         return response.data;
     },
 
     updatePost: async (id: string, data: UpdatePostRequest): Promise<Post> => {
-        const response = await api.put(`/posts/${id}`, data);
+        const formData = new FormData();
+        if (data.drinkName) formData.append("drinkName", data.drinkName);
+        if (data.instructions) formData.append("instructions", data.instructions);
+        if (data.drinkImage) formData.append("drinkImage", data.drinkImage);
+
+        const response = await api.put(`/posts/${id}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
         return response.data;
     },
 
     deletePost: async (id: string): Promise<void> => {
         await api.delete(`/posts/${id}`);
+    },
+
+    toggleLike: async (postId: string): Promise<Post> => {
+        const response = await api.post(`/posts/${postId}/like`);
+        return response.data;
+    },
+
+    addComment: async (postId: string, commentText: string): Promise<Post> => {
+        const response = await api.post(`/posts/${postId}/comments`, { commentText });
+        return response.data;
+    },
+
+    deleteComment: async (postId: string, commentId: string): Promise<Post> => {
+        const response = await api.delete(`/posts/${postId}/comments/${commentId}`);
+        return response.data;
     },
 };

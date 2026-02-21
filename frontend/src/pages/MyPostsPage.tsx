@@ -16,8 +16,9 @@ import { Add as AddIcon } from "@mui/icons-material";
 import { useUser } from "../hooks/useUser";
 import { usePosts } from "../hooks/usePosts";
 import { geminiService } from "../services/gemini";
+import { config } from "../config";
 import { postSchema, type PostFormData, type SortOption } from "../types/posts";
-import type { Post, CreatePostRequest } from "../services/posts";
+import type { Post } from "../services/posts";
 import {
     PostCard,
     SearchBar,
@@ -43,6 +44,8 @@ const MyPostsPage: React.FC = () => {
     const [aiPrompt, setAiPrompt] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
     const [aiError, setAiError] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | undefined>(undefined);
 
     const {
         control,
@@ -54,7 +57,6 @@ const MyPostsPage: React.FC = () => {
         defaultValues: {
             drinkName: "",
             instructions: "",
-            drinkImage: "",
         },
     });
 
@@ -104,16 +106,17 @@ const MyPostsPage: React.FC = () => {
             reset({
                 drinkName: post.drinkName,
                 instructions: post.instructions,
-                drinkImage: post.drinkImage,
             });
+            setImagePreview(post.drinkImage ? `${config.uploadFolderUrl}${post.drinkImage}` : undefined);
         } else {
             setEditingPost(null);
             reset({
                 drinkName: "",
                 instructions: "",
-                drinkImage: "",
             });
+            setImagePreview(undefined);
         }
+        setImageFile(null);
         setAiPrompt("");
         setAiError(null);
         setOpenDialog(true);
@@ -122,9 +125,19 @@ const MyPostsPage: React.FC = () => {
     const handleCloseDialog = () => {
         setOpenDialog(false);
         setEditingPost(null);
+        setImageFile(null);
+        setImagePreview(undefined);
         setAiPrompt("");
         setAiError(null);
         reset();
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            setImagePreview(URL.createObjectURL(file));
+        }
     };
 
     const handleGenerateWithAI = async () => {
@@ -138,12 +151,10 @@ const MyPostsPage: React.FC = () => {
 
         try {
             const recipe = await geminiService.generateCocktailRecipe(aiPrompt);
-            const imageUrl = await geminiService.generateCocktailImage(recipe.imagePrompt);
 
             reset({
                 drinkName: recipe.drinkName,
                 instructions: recipe.instructions,
-                drinkImage: imageUrl,
             });
 
             setAiPrompt("");
@@ -158,7 +169,13 @@ const MyPostsPage: React.FC = () => {
     const onSubmit = (data: PostFormData) => {
         if (editingPost) {
             updatePost(
-                { id: editingPost._id, data },
+                {
+                    id: editingPost._id,
+                    data: {
+                        ...data,
+                        ...(imageFile && { drinkImage: imageFile }),
+                    },
+                },
                 {
                     onSuccess: () => {
                         handleCloseDialog();
@@ -166,11 +183,17 @@ const MyPostsPage: React.FC = () => {
                 }
             );
         } else {
-            createPost(data as CreatePostRequest, {
-                onSuccess: () => {
-                    handleCloseDialog();
+            createPost(
+                {
+                    ...data,
+                    ...(imageFile && { drinkImage: imageFile }),
                 },
-            });
+                {
+                    onSuccess: () => {
+                        handleCloseDialog();
+                    },
+                }
+            );
         }
     };
 
@@ -299,6 +322,8 @@ const MyPostsPage: React.FC = () => {
                 isGenerating={isGenerating}
                 aiError={aiError}
                 onAiErrorDismiss={() => setAiError(null)}
+                imagePreview={imagePreview}
+                onImageChange={handleImageChange}
             />
 
             <DeleteConfirmDialog

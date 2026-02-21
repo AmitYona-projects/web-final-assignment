@@ -1,15 +1,20 @@
 import { Router } from "express";
 import ValidateRequest from "../../utils/express/joi";
 import {
+    getAllPostsSchema,
     createPostSchema,
     deletePostByIdSchema,
     getPostByIdSchema,
     getPostsBySenderIdSchema,
     updatePostSchema,
+    toggleLikeSchema,
+    addCommentSchema,
+    deleteCommentSchema,
 } from "./validator";
 import { PostController } from "./controller";
 import { wrapAuthMiddleware, wrapController } from "../../utils/express/middlewares";
 import { authMiddleware } from "../auth/middleware";
+import { upload } from "../../utils/upload";
 
 const postRouter = Router();
 
@@ -40,7 +45,7 @@ const postRouter = Router();
  *       '400':
  *         $ref: '#/components/responses/BadRequestError'
  */
-postRouter.get("/", wrapController(PostController.getAllPosts));
+postRouter.get("/", ValidateRequest(getAllPostsSchema), wrapController(PostController.getAllPosts));
 
 /**
  * @swagger
@@ -122,7 +127,13 @@ postRouter.get("/:id", ValidateRequest(getPostByIdSchema), wrapController(PostCo
  *       '500':
  *         $ref: '#/components/responses/InternalServerError'
  */
-postRouter.post("/", authMiddleware, ValidateRequest(createPostSchema), wrapAuthMiddleware(PostController.createPost));
+postRouter.post(
+    "/",
+    authMiddleware,
+    upload.single("drinkImage"),
+    ValidateRequest(createPostSchema),
+    wrapAuthMiddleware(PostController.createPost)
+);
 
 /**
  * @swagger
@@ -159,6 +170,7 @@ postRouter.post("/", authMiddleware, ValidateRequest(createPostSchema), wrapAuth
 postRouter.put(
     "/:id",
     authMiddleware,
+    upload.single("drinkImage"),
     ValidateRequest(updatePostSchema),
     wrapAuthMiddleware(PostController.updatePost)
 );
@@ -197,6 +209,27 @@ postRouter.delete(
     authMiddleware,
     ValidateRequest(deletePostByIdSchema),
     wrapAuthMiddleware(PostController.deletePostById)
+);
+
+postRouter.post(
+    "/:id/like",
+    authMiddleware,
+    ValidateRequest(toggleLikeSchema),
+    wrapAuthMiddleware(PostController.toggleLike)
+);
+
+postRouter.post(
+    "/:id/comments",
+    authMiddleware,
+    ValidateRequest(addCommentSchema),
+    wrapAuthMiddleware(PostController.addComment)
+);
+
+postRouter.delete(
+    "/:id/comments/:commentId",
+    authMiddleware,
+    ValidateRequest(deleteCommentSchema),
+    wrapAuthMiddleware(PostController.deleteComment)
 );
 
 export default postRouter;

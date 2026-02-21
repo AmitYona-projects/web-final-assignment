@@ -1,15 +1,29 @@
 import { StatusCodes } from "http-status-codes";
 import { DocumentNotFoundError, ServerError } from "../../utils/errors";
-import { IMongoPost, IPost } from "./interface";
+import { IComment, IMongoPost, IPost } from "./interface";
 import { PostModel } from "./model";
 
 export class PostManager {
-    static getAllPosts = async (): Promise<IMongoPost[]> => {
-        return PostModel.find().lean().exec();
+    static getAllPosts = async (skip = 0, limit = 10): Promise<{ posts: IMongoPost[]; total: number }> => {
+        const [posts, total] = await Promise.all([
+            PostModel.find()
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .populate("comments.senderId", "username image")
+                .lean()
+                .exec(),
+            PostModel.countDocuments(),
+        ]);
+        return { posts, total };
     };
 
     static getPostById = async (id: string): Promise<IMongoPost> => {
-        return PostModel.findById(id).orFail(new DocumentNotFoundError(id)).lean().exec();
+        return PostModel.findById(id)
+            .orFail(new DocumentNotFoundError(id))
+            .populate("comments.senderId", "username image")
+            .lean()
+            .exec();
     };
 
     static getPostsBySenderId = async (senderId: string): Promise<IMongoPost[]> => {
@@ -43,5 +57,50 @@ export class PostManager {
         await PostModel.findByIdAndDelete(id).orFail(new DocumentNotFoundError(id)).lean().exec();
 
         return `Post ${id} deleted succesfully`;
+    };
+
+    static toggleLike = async (postId: string, userId: string): Promise<IMongoPost> => {
+        const post = await PostModel.findById(postId).orFail(new DocumentNotFoundError(postId));
+
+        const hasLiked = post.likes.some((id) => id.toString() === userId);
+
+        if (hasLiked) {
+            return PostModel.findByIdAndUpdate(postId, { $pull: { likes: userId } }, { new: true })
+                .orFail(new DocumentNotFoundError(postId))
+                .lean()
+                .exec();
+        } else {
+            return PostModel.findByIdAndUpdate(postId, { $addToSet: { likes: userId } }, { new: true })
+                .orFail(new DocumentNotFoundError(postId))
+                .lean()
+                .exec();
+        }
+    };
+
+    static addComment = async (postId: string, senderId: string, commentText: string): Promise<IMongoPost> => {
+        return PostModel.findByIdAndUpdate(postId, { $push: { comments: { senderId, commentText } } }, { new: true })
+            .orFail(new DocumentNotFoundError(postId))
+            .populate("comments.senderId", "username image")
+            .lean()
+            .exec();
+    };
+
+    static deleteComment = async (postId: string, commentId: string, userId: string): Promise<IMongoPost> => {
+        const post = await PostModel.findById(postId).orFail(new DocumentNotFoundError(postId)).lean().exec();
+
+        const comment = post.comments.find((c: IComment) => c._id?.toString() === commentId);
+        if (!comment) {
+            throw new ServerError(StatusCodes.NOT_FOUND, "Comment not found");
+        }
+
+        if (comment.senderId.toString() !== userId && post.owner.toString() !== userId) {
+            throw new ServerError(StatusCodes.FORBIDDEN, "You are not allowed to delete this comment");
+        }
+
+        return PostModel.findByIdAndUpdate(postId, { $pull: { comments: { _id: commentId } } }, { new: true })
+            .orFail(new DocumentNotFoundError(postId))
+            .populate("comments.senderId", "username image")
+            .lean()
+            .exec();
     };
 }

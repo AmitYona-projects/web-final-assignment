@@ -4,7 +4,7 @@ import multer from "multer";
 
 const UPLOAD_DIR = path.resolve(__dirname, "../..", "public/uploads");
 
-const ALLOWED_MIME_TYPES = ["image/png", "image/jpeg", "image/jpg"];
+const ALLOWED_MIME_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const storage = multer.diskStorage({
@@ -22,7 +22,7 @@ export const upload = multer({
         if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error("Only PNG and JPG images are allowed"));
+            cb(new Error("Only PNG, JPG and WebP images are allowed"));
         }
     },
 });
