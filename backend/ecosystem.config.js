@@ -1,7 +1,7 @@
 module.exports = {
     apps: [
         {
-            name: "cocktail-generator-backend",
+            name: "backend",
             cwd: "/home/node08/finalProject/web-final-assignment/backend",
             script: "dist/index.js",
             interpreter: "/usr/bin/node",
