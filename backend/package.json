@@ -14,7 +14,8 @@
     "test:auth": "tsc && jest --detectOpenHandles --forceExit src/tests/auth.test.ts",
     "test:user": "tsc && jest --detectOpenHandles --forceExit src/tests/users.test.ts",
     "test:post": "tsc && jest --detectOpenHandles --forceExit src/tests/posts.test.ts",
-    "coverage": "tsc && jest --detectOpenHandles --coverage --runInBand --forceExit"
+    "coverage": "tsc && jest --detectOpenHandles --coverage --runInBand --forceExit",
+    "prod": "npm run build && pm2 restart ecosystem.config.js --env production"
   },
   "keywords": [],
   "author": "",

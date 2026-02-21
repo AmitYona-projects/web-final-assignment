@@ -6,14 +6,13 @@ export interface LoginRequest {
 }
 
 export interface GoogleLoginRequest {
-    code: string;
+    token: string;
 }
 
 export interface RegisterRequest {
     email: string;
     password: string;
     username: string;
-    image?: File;
 }
 
 export interface ResetPasswordRequest {
@@ -27,17 +26,11 @@ export interface AuthResponse {
         _id: string;
         email: string;
         username: string;
-        image?: string;
         refreshTokens?: string[];
     };
 }
 
 export const authService = {
-    refreshToken: async (refreshToken: string): Promise<AuthResponse> => {
-        const response = await api.post<AuthResponse>("/auth/refresh-token", { refreshToken });
-        return response.data;
-    },
-
     login: async (data: LoginRequest): Promise<AuthResponse> => {
         const response = await api.post<AuthResponse>("/auth/login", data);
         return response.data;
@@ -49,15 +42,7 @@ export const authService = {
     },
 
     register: async (data: RegisterRequest): Promise<AuthResponse> => {
-        const formData = new FormData();
-        formData.append("email", data.email);
-        formData.append("password", data.password);
-        formData.append("username", data.username);
-        if (data.image) formData.append("image", data.image);
-
-        const response = await api.post<AuthResponse>("/auth/register", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-        });
+        const response = await api.post<AuthResponse>("/auth/register", data);
         return response.data;
     },
 

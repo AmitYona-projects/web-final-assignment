@@ -24,19 +24,19 @@ export class Server {
     static createExpressApp() {
         const app = express();
 
-        app.use(
-            helmet({
-                crossOriginResourcePolicy: { policy: "cross-origin" },
-            })
-        );
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
         app.use(cors());
 
         app.use("/uploads", express.static(path.resolve(__dirname, "../..", "public/uploads")));
+        app.use(express.static(path.resolve(__dirname, "../..", "public")));
 
         app.use(loggerMiddleware);
         app.use(appRouter);
+
+        app.get("/*splat", (req, res) => {
+            res.sendFile(path.resolve(__dirname, "../..", "public/index.html"));
+        });
 
         initializeSwagger(app);
 
