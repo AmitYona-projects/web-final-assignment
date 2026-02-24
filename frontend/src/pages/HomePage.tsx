@@ -3,13 +3,13 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import {
     Box,
     Typography,
-    Alert,
     Card,
     CardContent,
     Stack,
     CircularProgress,
     Grid,
 } from "@mui/material";
+import { PageStatus } from "../components/ui";
 import { useUser } from "../hooks/useUser";
 import { useAllPosts } from "../hooks/useAllPosts";
 import type { SortOption, DrinkCategory } from "../types/posts";
@@ -119,23 +119,8 @@ const HomePage: React.FC = () => {
 
     const hasActiveFilters = !!(committedSearch || filterWithLikes || filterWithComments || filterCategories.length > 0);
 
-    if (isLoading) {
-        return (
-            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Box sx={{ p: 4 }}>
-                <Alert severity="error">Failed to load posts</Alert>
-            </Box>
-        );
-    }
-
     return (
+        <PageStatus isLoading={isLoading} error={error} errorMessage="Failed to load posts">
         <Box sx={{ p: 4 }}>
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" component="h1" fontWeight="bold">
@@ -197,6 +182,7 @@ const HomePage: React.FC = () => {
                 {isFetchingNextPage && <CircularProgress size={32} />}
             </Box>
         </Box>
+        </PageStatus>
     );
 };
 

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Box, FormControl, InputLabel, Select, MenuItem, Chip, Button, TextField, IconButton, CircularProgress, Tooltip } from "@mui/material";
+import { Box, Chip, Button, TextField, IconButton, CircularProgress, Tooltip } from "@mui/material";
 import { Favorite as FavoriteIcon, Comment as CommentIcon, AutoAwesome as AutoAwesomeIcon } from "@mui/icons-material";
 import type React from "react";
 import { DRINK_CATEGORIES, type SortOption, type DrinkCategory } from "../../types/posts";
+import SortBySelect from "./SortBySelect";
 
 export interface PostFiltersProps {
     sortBy: SortOption;
@@ -50,19 +51,7 @@ const PostFilters: React.FC<PostFiltersProps> = ({
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
-                <FormControl sx={{ minWidth: 200 }}>
-                    <InputLabel>Sort By</InputLabel>
-                    <Select
-                        value={sortBy}
-                        label="Sort By"
-                        onChange={(e) => onSortChange(e.target.value as SortOption)}
-                    >
-                        <MenuItem value="newest">Newest First</MenuItem>
-                        <MenuItem value="oldest">Oldest First</MenuItem>
-                        <MenuItem value="most-liked">Most Liked</MenuItem>
-                        <MenuItem value="most-commented">Most Commented</MenuItem>
-                    </Select>
-                </FormControl>
+                <SortBySelect value={sortBy} onChange={onSortChange} minWidth={200} />
 
                 <Chip
                     label="With Likes"

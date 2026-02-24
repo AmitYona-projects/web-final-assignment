@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,37 +9,33 @@ import {
     Alert,
     Link,
     Stack,
-    Divider,
-    Avatar,
-    IconButton,
 } from "@mui/material";
-import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import { Link as RouterLink } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
-import { GoogleLogin } from "@react-oauth/google";
+import { useImageUpload } from "../hooks/useImageUpload";
+import { AvatarUpload, GoogleAuthSection } from "../components/ui";
+import type React from "react";
 
-const registrationSchema = z
-    .object({
-        username: z
-            .string()
-            .min(3, "Username must be at least 3 characters")
-            .max(20, "Username cannot exceed 20 characters")
-            .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
-        email: z.string().email("Invalid email address").min(1, "Email is required"),
-        password: z
-            .string()
-            .min(8, "Password must be at least 8 characters")
-            .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-            .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-            .regex(/[0-9]/, "Password must contain at least one number"),
-    })
+const registrationSchema = z.object({
+    username: z
+        .string()
+        .min(3, "Username must be at least 3 characters")
+        .max(20, "Username cannot exceed 20 characters")
+        .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+    email: z.string().email("Invalid email address").min(1, "Email is required"),
+    password: z
+        .string()
+        .min(8, "Password must be at least 8 characters")
+        .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+        .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+        .regex(/[0-9]/, "Password must contain at least one number"),
+});
 
 type RegistrationFormData = z.infer<typeof registrationSchema>;
 
 const RegistrationPage: React.FC = () => {
     const { register: registerMutation, googleLogin } = useAuth();
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const { imageFile, imagePreview, handleImageChange } = useImageUpload();
 
     const {
         control,
@@ -48,26 +43,11 @@ const RegistrationPage: React.FC = () => {
         formState: { errors, isSubmitting },
     } = useForm<RegistrationFormData>({
         resolver: zodResolver(registrationSchema),
-        defaultValues: {
-            username: "",
-            email: "",
-            password: "",
-        },
+        defaultValues: { username: "", email: "", password: "" },
     });
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setImageFile(file);
-            setImagePreview(URL.createObjectURL(file));
-        }
-    };
-
     const onSubmit = async (data: RegistrationFormData) => {
-        registerMutation.mutate({
-            ...data,
-            ...(imageFile && { image: imageFile }),
-        });
+        registerMutation.mutate({ ...data, ...(imageFile && { image: imageFile }) });
     };
 
     return (
@@ -86,35 +66,9 @@ const RegistrationPage: React.FC = () => {
             )}
 
             <form onSubmit={handleSubmit(onSubmit)}>
-                <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-                    <Box sx={{ position: "relative" }}>
-                        <Avatar
-                            src={imagePreview || undefined}
-                            sx={{ width: 100, height: 100 }}
-                        />
-                        <IconButton
-                            component="label"
-                            sx={{
-                                position: "absolute",
-                                bottom: -4,
-                                right: -4,
-                                bgcolor: "primary.main",
-                                color: "white",
-                                "&:hover": { bgcolor: "primary.dark" },
-                                width: 36,
-                                height: 36,
-                            }}
-                        >
-                            <PhotoCamera fontSize="small" />
-                            <input
-                                type="file"
-                                hidden
-                                accept="image/png,image/jpeg,image/jpg"
-                                onChange={handleImageChange}
-                            />
-                        </IconButton>
-                    </Box>
-                </Box>
+                <Stack alignItems="center" sx={{ mb: 2 }}>
+                    <AvatarUpload src={imagePreview} onChange={handleImageChange} />
+                </Stack>
 
                 <Controller
                     name="username"
@@ -178,23 +132,7 @@ const RegistrationPage: React.FC = () => {
                 </Button>
             </form>
 
-            <Divider sx={{ my: 3 }}>
-                <Typography variant="body2" color="text.secondary">
-                    OR
-                </Typography>
-            </Divider>
-
-            <Stack direction="row" justifyContent="center" alignItems="center">
-                <GoogleLogin
-                    onSuccess={googleLogin.triggerFlow}
-                    onError={() => console.error("Google login error")}
-                    text="continue_with"
-                    shape="circle"
-                    theme="outline"
-                    logo_alignment="center"
-                    width="700px"
-                />
-            </Stack>
+            <GoogleAuthSection onSuccess={googleLogin.triggerFlow} />
 
             <Box sx={{ textAlign: "center" }}>
                 <Typography variant="body2" color="text.secondary">

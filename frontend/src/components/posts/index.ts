@@ -1,6 +1,8 @@
 export { default as PostCard } from "./PostCard";
 export { default as FeedPostCard } from "./FeedPostCard";
+export { default as DrinkCategoryChips } from "./DrinkCategoryChips";
 export { default as SearchBar } from "./SearchBar";
+export { default as SortBySelect } from "./SortBySelect";
 export { default as PostFilters } from "./PostFilters";
 export { default as PostDialog } from "./PostDialog";
 export { default as AIGeneratorSection } from "./AIGeneratorSection";
@@ -10,7 +12,9 @@ export { default as EmptyState } from "./EmptyState";
 
 export type { PostCardProps } from "./PostCard";
 export type { FeedPostCardProps } from "./FeedPostCard";
+export type { DrinkCategoryChipsProps } from "./DrinkCategoryChips";
 export type { SearchBarProps } from "./SearchBar";
+export type { SortBySelectProps } from "./SortBySelect";
 export type { PostFiltersProps } from "./PostFilters";
 export type { PostDialogProps } from "./PostDialog";
 export type { AIGeneratorSectionProps } from "./AIGeneratorSection";
