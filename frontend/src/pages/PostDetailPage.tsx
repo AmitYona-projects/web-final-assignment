@@ -84,6 +84,7 @@ const PostDetailPage: React.FC = () => {
     };
 
     const currentUserId = user?._id || "";
+    if (!post) return null;
     const hasLiked = post.likes.includes(currentUserId);
 
     return (

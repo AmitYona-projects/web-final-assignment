@@ -3,7 +3,6 @@ import http from "http";
 import https from "https";
 import path from "path";
 import express from "express";
-import helmet from "helmet";
 import cors from "cors";
 import config from "../config";
 import { errorMiddleware } from "../utils/express/middlewares";
@@ -33,12 +32,11 @@ export class Server {
 
         app.use(loggerMiddleware);
         app.use(appRouter);
+        initializeSwagger(app);
 
         app.get("/*splat", (req, res) => {
             res.sendFile(path.resolve(__dirname, "../..", "public/index.html"));
         });
-
-        initializeSwagger(app);
 
         app.use(errorMiddleware);
 
