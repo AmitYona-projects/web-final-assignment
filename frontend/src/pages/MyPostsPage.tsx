@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -17,7 +17,7 @@ import { useUser } from "../hooks/useUser";
 import { usePosts } from "../hooks/usePosts";
 import { geminiService } from "../services/gemini";
 import { config } from "../config";
-import { postSchema, type PostFormData, type SortOption } from "../types/posts";
+import { postSchema, type PostFormData, type SortOption, type DrinkCategory } from "../types/posts";
 import type { Post } from "../services/posts";
 import {
     PostCard,
@@ -31,17 +31,40 @@ import type React from "react";
 
 const MyPostsPage: React.FC = () => {
     const { user } = useUser();
-    const { posts = [], isLoading, error, createPost, updatePost, deletePost, isCreating, isUpdating, isDeleting } = usePosts(user?._id || "");
 
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchInput, setSearchInput] = useState("");
+    const [committedSearch, setCommittedSearch] = useState("");
     const [sortBy, setSortBy] = useState<SortOption>("newest");
     const [filterWithLikes, setFilterWithLikes] = useState(false);
     const [filterWithComments, setFilterWithComments] = useState(false);
+    const [filterCategories, setFilterCategories] = useState<DrinkCategory[]>([]);
+    const [aiPrompt, setAiSearchPrompt] = useState<string | undefined>(undefined);
+    const [isAiSearching, setIsAiSearching] = useState(false);
+
+    const searchParams = useMemo(() => ({
+        search: committedSearch || undefined,
+        sort: sortBy !== "newest" ? sortBy : undefined,
+        hasLikes: filterWithLikes || undefined,
+        hasComments: filterWithComments || undefined,
+        categories: filterCategories.length > 0 ? filterCategories : undefined,
+        aiPrompt,
+    }), [committedSearch, sortBy, filterWithLikes, filterWithComments, filterCategories, aiPrompt]);
+
+    const { posts, total, aiCategories, isLoading, isFetching, error, createPost, updatePost, deletePost, isCreating, isUpdating, isDeleting } = usePosts(user?._id || "", searchParams);
+
+    useEffect(() => {
+        if (aiCategories && aiCategories.length > 0) {
+            setFilterCategories(aiCategories);
+            setIsAiSearching(false);
+            setAiSearchPrompt(undefined);
+        }
+    }, [aiCategories]);
+
     const [openDialog, setOpenDialog] = useState(false);
     const [editingPost, setEditingPost] = useState<Post | null>(null);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [postToDelete, setPostToDelete] = useState<string | null>(null);
-    const [aiPrompt, setAiPrompt] = useState("");
+    const [aiFormPrompt, setAiFormPrompt] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
     const [aiError, setAiError] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -57,48 +80,13 @@ const MyPostsPage: React.FC = () => {
         defaultValues: {
             drinkName: "",
             instructions: "",
+            categories: [],
         },
     });
 
-    // Filter and sort posts
-    const filteredAndSortedPosts = useMemo(() => {
-        let filtered = [...posts];
-
-        // Apply search filter
-        if (searchTerm) {
-            filtered = filtered.filter((post) =>
-                post.drinkName.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
-
-        // Apply likes filter
-        if (filterWithLikes) {
-            filtered = filtered.filter((post) => post.likes.length > 0);
-        }
-
-        // Apply comments filter
-        if (filterWithComments) {
-            filtered = filtered.filter((post) => post.comments.length > 0);
-        }
-
-        // Apply sorting
-        filtered.sort((a, b) => {
-            switch (sortBy) {
-                case "newest":
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                case "oldest":
-                    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-                case "most-liked":
-                    return b.likes.length - a.likes.length;
-                case "most-commented":
-                    return b.comments.length - a.comments.length;
-                default:
-                    return 0;
-            }
-        });
-
-        return filtered;
-    }, [posts, searchTerm, sortBy, filterWithLikes, filterWithComments]);
+    const handleSearch = (value: string) => {
+        setCommittedSearch(value);
+    };
 
     const handleOpenDialog = (post?: Post) => {
         if (post) {
@@ -106,6 +94,7 @@ const MyPostsPage: React.FC = () => {
             reset({
                 drinkName: post.drinkName,
                 instructions: post.instructions,
+                categories: post.categories || [],
             });
             setImagePreview(post.drinkImage ? `${config.uploadFolderUrl}${post.drinkImage}` : undefined);
         } else {
@@ -113,11 +102,12 @@ const MyPostsPage: React.FC = () => {
             reset({
                 drinkName: "",
                 instructions: "",
+                categories: [],
             });
             setImagePreview(undefined);
         }
         setImageFile(null);
-        setAiPrompt("");
+        setAiFormPrompt("");
         setAiError(null);
         setOpenDialog(true);
     };
@@ -127,7 +117,7 @@ const MyPostsPage: React.FC = () => {
         setEditingPost(null);
         setImageFile(null);
         setImagePreview(undefined);
-        setAiPrompt("");
+        setAiFormPrompt("");
         setAiError(null);
         reset();
     };
@@ -141,7 +131,7 @@ const MyPostsPage: React.FC = () => {
     };
 
     const handleGenerateWithAI = async () => {
-        if (!aiPrompt.trim()) {
+        if (!aiFormPrompt.trim()) {
             setAiError("Please enter a description for the cocktail you want to create");
             return;
         }
@@ -150,14 +140,15 @@ const MyPostsPage: React.FC = () => {
         setAiError(null);
 
         try {
-            const recipe = await geminiService.generateCocktailRecipe(aiPrompt);
+            const recipe = await geminiService.generateCocktailRecipe(aiFormPrompt);
 
             reset({
                 drinkName: recipe.drinkName,
                 instructions: recipe.instructions,
+                categories: recipe.categories || [],
             });
 
-            setAiPrompt("");
+            setAiFormPrompt("");
         } catch (error) {
             console.error("AI generation error:", error);
             setAiError(error instanceof Error ? error.message : "Failed to generate cocktail recipe");
@@ -226,13 +217,27 @@ const MyPostsPage: React.FC = () => {
         }
     };
 
-    const handleClearFilters = () => {
-        setSearchTerm("");
-        setFilterWithLikes(false);
-        setFilterWithComments(false);
+    const handleCategoryToggle = (category: DrinkCategory) => {
+        setFilterCategories((prev) =>
+            prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+        );
     };
 
-    const hasActiveFilters = !!(searchTerm || filterWithLikes || filterWithComments);
+    const handleAiCategorySearch = (prompt: string) => {
+        setIsAiSearching(true);
+        setAiSearchPrompt(prompt);
+    };
+
+    const handleClearFilters = () => {
+        setSearchInput("");
+        setCommittedSearch("");
+        setFilterWithLikes(false);
+        setFilterWithComments(false);
+        setFilterCategories([]);
+        setAiSearchPrompt(undefined);
+    };
+
+    const hasActiveFilters = !!(committedSearch || filterWithLikes || filterWithComments || filterCategories.length > 0);
 
     if (isLoading) {
         return (
@@ -269,8 +274,9 @@ const MyPostsPage: React.FC = () => {
                 <CardContent>
                     <Stack spacing={2}>
                         <SearchBar
-                            value={searchTerm}
-                            onChange={setSearchTerm}
+                            value={searchInput}
+                            onChange={setSearchInput}
+                            onSearch={handleSearch}
                             placeholder="Search by drink name..."
                         />
 
@@ -282,20 +288,27 @@ const MyPostsPage: React.FC = () => {
                             onFilterChange={handleFilterChange}
                             onClearFilters={handleClearFilters}
                             hasActiveFilters={hasActiveFilters}
+                            filterCategories={filterCategories}
+                            onCategoryToggle={handleCategoryToggle}
+                            onAiCategorySearch={handleAiCategorySearch}
+                            isAiSearching={isAiSearching}
                         />
                     </Stack>
                 </CardContent>
             </Card>
 
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Showing {filteredAndSortedPosts.length} of {posts.length} posts
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                    Showing {posts.length} of {total} posts
+                </Typography>
+                {isFetching && <CircularProgress size={16} />}
+            </Box>
 
-            {filteredAndSortedPosts.length === 0 ? (
-                <EmptyState hasPosts={posts.length > 0} hasFilters={hasActiveFilters} />
+            {posts.length === 0 ? (
+                <EmptyState hasPosts={total > 0} hasFilters={hasActiveFilters} />
             ) : (
                 <Grid container spacing={3}>
-                    {filteredAndSortedPosts.map((post) => (
+                    {posts.map((post) => (
                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={post._id}>
                             <PostCard
                                 post={post}
@@ -316,8 +329,8 @@ const MyPostsPage: React.FC = () => {
                 control={control}
                 handleSubmit={handleSubmit}
                 errors={errors}
-                aiPrompt={aiPrompt}
-                onAiPromptChange={setAiPrompt}
+                aiPrompt={aiFormPrompt}
+                onAiPromptChange={setAiFormPrompt}
                 onGenerateWithAI={handleGenerateWithAI}
                 isGenerating={isGenerating}
                 aiError={aiError}

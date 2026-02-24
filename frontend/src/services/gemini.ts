@@ -1,8 +1,10 @@
 import api from "./api";
+import type { DrinkCategory } from "../types/posts";
 
 export interface CocktailRecipe {
     drinkName: string;
     instructions: string;
+    categories: DrinkCategory[];
 }
 
 export const geminiService = {

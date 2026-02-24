@@ -47,6 +47,10 @@ const geminiRouter = Router();
  *                   type: string
  *                 instructions:
  *                   type: string
+ *                 categories:
+ *                   type: array
+ *                   items:
+ *                     type: string
  *       '400':
  *         $ref: '#/components/responses/BadRequestError'
  *       '401':

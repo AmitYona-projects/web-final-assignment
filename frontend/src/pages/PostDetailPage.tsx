@@ -18,6 +18,7 @@ import {
     Divider,
     CircularProgress,
     Alert,
+    Chip,
 } from "@mui/material";
 import {
     ArrowBack as ArrowBackIcon,
@@ -129,6 +130,14 @@ const PostDetailPage: React.FC = () => {
                     <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
                         {post.instructions}
                     </Typography>
+
+                    {post.categories?.length > 0 && (
+                        <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                            {post.categories.map((cat) => (
+                                <Chip key={cat} label={cat} size="small" color="secondary" variant="outlined" />
+                            ))}
+                        </Box>
+                    )}
 
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
                         <IconButton

@@ -1,5 +1,20 @@
 import { z } from "zod";
 
+export const DRINK_CATEGORIES = [
+    "sweet",
+    "spicy",
+    "sour",
+    "bitter",
+    "fruity",
+    "creamy",
+    "refreshing",
+    "strong",
+    "tropical",
+    "herbal",
+] as const;
+
+export type DrinkCategory = (typeof DRINK_CATEGORIES)[number];
+
 export const postSchema = z.object({
     drinkName: z
         .string()
@@ -9,6 +24,9 @@ export const postSchema = z.object({
         .string()
         .min(10, "Instructions must be at least 10 characters")
         .max(1000, "Instructions cannot exceed 1000 characters"),
+    categories: z
+        .array(z.enum(DRINK_CATEGORIES))
+        .optional()
 });
 
 export type PostFormData = z.infer<typeof postSchema>;

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import {
     Box,
@@ -11,7 +12,7 @@ import {
 } from "@mui/material";
 import { useUser } from "../hooks/useUser";
 import { useAllPosts } from "../hooks/useAllPosts";
-import type { SortOption } from "../types/posts";
+import type { SortOption, DrinkCategory } from "../types/posts";
 import {
     FeedPostCard,
     SearchBar,
@@ -22,21 +23,45 @@ import type React from "react";
 
 const HomePage: React.FC = () => {
     const { user } = useUser();
+
+    const [searchInput, setSearchInput] = useState("");
+    const [committedSearch, setCommittedSearch] = useState("");
+    const [sortBy, setSortBy] = useState<SortOption>("newest");
+    const [filterWithLikes, setFilterWithLikes] = useState(false);
+    const [filterWithComments, setFilterWithComments] = useState(false);
+    const [filterCategories, setFilterCategories] = useState<DrinkCategory[]>([]);
+    const [aiPrompt, setAiPrompt] = useState<string | undefined>(undefined);
+    const [isAiSearching, setIsAiSearching] = useState(false);
+
+    const searchParams = useMemo(() => ({
+        search: committedSearch || undefined,
+        sort: sortBy !== "newest" ? sortBy : undefined,
+        hasLikes: filterWithLikes || undefined,
+        hasComments: filterWithComments || undefined,
+        categories: filterCategories.length > 0 ? filterCategories : undefined,
+        aiPrompt,
+    }), [committedSearch, sortBy, filterWithLikes, filterWithComments, filterCategories, aiPrompt]);
+
     const {
         posts,
         total,
+        aiCategories,
         isLoading,
+        isFetching,
         error,
         fetchNextPage,
         hasNextPage,
         isFetchingNextPage,
         toggleLike,
-    } = useAllPosts();
+    } = useAllPosts(searchParams);
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [sortBy, setSortBy] = useState<SortOption>("newest");
-    const [filterWithLikes, setFilterWithLikes] = useState(false);
-    const [filterWithComments, setFilterWithComments] = useState(false);
+    useEffect(() => {
+        if (aiCategories && aiCategories.length > 0) {
+            setFilterCategories(aiCategories);
+            setIsAiSearching(false);
+            setAiPrompt(undefined);
+        }
+    }, [aiCategories]);
 
     const observerRef = useRef<IntersectionObserver | null>(null);
     const sentinelRef = useCallback(
@@ -60,40 +85,9 @@ const HomePage: React.FC = () => {
         };
     }, []);
 
-    const filteredAndSortedPosts = useMemo(() => {
-        let filtered = [...posts];
-
-        if (searchTerm) {
-            filtered = filtered.filter((post) =>
-                post.drinkName.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
-
-        if (filterWithLikes) {
-            filtered = filtered.filter((post) => post.likes.length > 0);
-        }
-
-        if (filterWithComments) {
-            filtered = filtered.filter((post) => post.comments.length > 0);
-        }
-
-        filtered.sort((a, b) => {
-            switch (sortBy) {
-                case "newest":
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                case "oldest":
-                    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-                case "most-liked":
-                    return b.likes.length - a.likes.length;
-                case "most-commented":
-                    return b.comments.length - a.comments.length;
-                default:
-                    return 0;
-            }
-        });
-
-        return filtered;
-    }, [posts, searchTerm, sortBy, filterWithLikes, filterWithComments]);
+    const handleSearch = (value: string) => {
+        setCommittedSearch(value);
+    };
 
     const handleFilterChange = (filter: "likes" | "comments", value: boolean) => {
         if (filter === "likes") {
@@ -103,13 +97,27 @@ const HomePage: React.FC = () => {
         }
     };
 
-    const handleClearFilters = () => {
-        setSearchTerm("");
-        setFilterWithLikes(false);
-        setFilterWithComments(false);
+    const handleCategoryToggle = (category: DrinkCategory) => {
+        setFilterCategories((prev) =>
+            prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+        );
     };
 
-    const hasActiveFilters = !!(searchTerm || filterWithLikes || filterWithComments);
+    const handleAiCategorySearch = (prompt: string) => {
+        setIsAiSearching(true);
+        setAiPrompt(prompt);
+    };
+
+    const handleClearFilters = () => {
+        setSearchInput("");
+        setCommittedSearch("");
+        setFilterWithLikes(false);
+        setFilterWithComments(false);
+        setFilterCategories([]);
+        setAiPrompt(undefined);
+    };
+
+    const hasActiveFilters = !!(committedSearch || filterWithLikes || filterWithComments || filterCategories.length > 0);
 
     if (isLoading) {
         return (
@@ -139,8 +147,9 @@ const HomePage: React.FC = () => {
                 <CardContent>
                     <Stack spacing={2}>
                         <SearchBar
-                            value={searchTerm}
-                            onChange={setSearchTerm}
+                            value={searchInput}
+                            onChange={setSearchInput}
+                            onSearch={handleSearch}
                             placeholder="Search by drink name..."
                         />
 
@@ -152,20 +161,27 @@ const HomePage: React.FC = () => {
                             onFilterChange={handleFilterChange}
                             onClearFilters={handleClearFilters}
                             hasActiveFilters={hasActiveFilters}
+                            filterCategories={filterCategories}
+                            onCategoryToggle={handleCategoryToggle}
+                            onAiCategorySearch={handleAiCategorySearch}
+                            isAiSearching={isAiSearching}
                         />
                     </Stack>
                 </CardContent>
             </Card>
 
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Showing {filteredAndSortedPosts.length} of {total} posts
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                    Showing {posts.length} of {total} posts
+                </Typography>
+                {isFetching && !isFetchingNextPage && <CircularProgress size={16} />}
+            </Box>
 
-            {filteredAndSortedPosts.length === 0 ? (
-                <EmptyState hasPosts={posts.length > 0} hasFilters={hasActiveFilters} />
+            {posts.length === 0 ? (
+                <EmptyState hasPosts={total > 0} hasFilters={hasActiveFilters} />
             ) : (
                 <Grid container spacing={3} alignItems="flex-start">
-                    {filteredAndSortedPosts.map((post) => (
+                    {posts.map((post) => (
                         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={post._id}>
                             <FeedPostCard
                                 post={post}
@@ -177,7 +193,6 @@ const HomePage: React.FC = () => {
                 </Grid>
             )}
 
-            {/* Infinite scroll sentinel */}
             <Box ref={sentinelRef} sx={{ py: 2, display: "flex", justifyContent: "center" }}>
                 {isFetchingNextPage && <CircularProgress size={32} />}
             </Box>

@@ -1,12 +1,26 @@
 import { Request, Response } from "express";
 import { PostManager } from "./manager";
 import { AuthRequest } from "../auth/interface";
+import { PostSearchParams } from "./interface";
+
+const parseSearchParams = (query: Request["query"]): PostSearchParams => ({
+    skip: parseInt(query.skip as string) || 0,
+    limit: parseInt(query.limit as string) || 10,
+    search: (query.search as string) || undefined,
+    categories: query.categories
+        ? ((Array.isArray(query.categories)
+            ? (query.categories as string[])
+            : [query.categories as string]) as PostSearchParams["categories"])
+        : undefined,
+    sort: (query.sort as string) || undefined,
+    hasLikes: query.hasLikes === "true",
+    hasComments: query.hasComments === "true",
+    aiPrompt: (query.aiPrompt as string) || undefined,
+});
 
 export class PostController {
     static getAllPosts = async (req: Request, res: Response) => {
-        const skip = parseInt(req.query.skip as string) || 0;
-        const limit = parseInt(req.query.limit as string) || 10;
-        res.json(await PostManager.getAllPosts(skip, limit));
+        res.json(await PostManager.getAllPosts(parseSearchParams(req.query)));
     };
 
     static getPostById = async (req: Request, res: Response) => {
@@ -14,7 +28,8 @@ export class PostController {
     };
 
     static getPostsBySenderId = async (req: Request, res: Response) => {
-        res.json(await PostManager.getPostsBySenderId(req.query?.senderId as string));
+        const params = parseSearchParams(req.query);
+        res.json(await PostManager.getPostsBySenderId(req.query.senderId as string, params));
     };
 
     static createPost = async (req: AuthRequest, res: Response) => {

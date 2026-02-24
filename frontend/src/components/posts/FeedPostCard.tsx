@@ -8,6 +8,7 @@ import {
     Box,
     IconButton,
     Button,
+    Chip,
 } from "@mui/material";
 import {
     Favorite as FavoriteIcon,
@@ -73,6 +74,13 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({
                     >
                         {expanded ? "Show less" : "Read more"}
                     </Button>
+                )}
+                {post.categories?.length > 0 && (
+                    <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {post.categories.map((cat) => (
+                            <Chip key={cat} label={cat} size="small" color="secondary" variant="outlined" />
+                        ))}
+                    </Box>
                 )}
             </CardContent>
 

@@ -1,9 +1,9 @@
-import { TextField, Stack, Box, IconButton, Typography } from "@mui/material";
+import { TextField, Stack, Box, IconButton, Typography, Chip } from "@mui/material";
 import { PhotoCamera } from "@mui/icons-material";
 import { Controller } from "react-hook-form";
 import type { Control, FieldErrors } from "react-hook-form";
 import type React from "react";
-import type { PostFormData } from "../../types/posts";
+import { DRINK_CATEGORIES, type PostFormData, type DrinkCategory } from "../../types/posts";
 
 export interface PostFormProps {
     control: Control<PostFormData>;
@@ -47,6 +47,40 @@ const PostForm: React.FC<PostFormProps> = ({ control, errors, disabled = false, 
                     />
                 )}
             />
+
+            <Box>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    Categories
+                </Typography>
+                <Controller
+                    name="categories"
+                    control={control}
+                    render={({ field }) => (
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                            {DRINK_CATEGORIES.map((category) => {
+                                const selected = field.value?.includes(category);
+                                return (
+                                    <Chip
+                                        key={category}
+                                        label={category}
+                                        clickable
+                                        color={selected ? "primary" : "default"}
+                                        variant={selected ? "filled" : "outlined"}
+                                        onClick={() => {
+                                            const current = field.value || [];
+                                            const updated = selected
+                                                ? current.filter((c: DrinkCategory) => c !== category)
+                                                : [...current, category];
+                                            field.onChange(updated);
+                                        }}
+                                        disabled={disabled}
+                                    />
+                                );
+                            })}
+                        </Box>
+                    )}
+                />
+            </Box>
 
             <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
