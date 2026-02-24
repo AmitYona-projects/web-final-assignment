@@ -25,6 +25,9 @@ const config = {
         clientId: env.get("GOOGLE_CLIENT_ID").required().asString(),
         clientSecret: env.get("GOOGLE_CLIENT_SECRET").required().asString(),
     },
+    gemini: {
+        apiKey: env.get("GEMINI_API_KEY").required().asString(),
+    },
     test: {
         posts: {
             route: "/posts",
