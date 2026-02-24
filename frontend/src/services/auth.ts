@@ -6,7 +6,7 @@ export interface LoginRequest {
 }
 
 export interface GoogleLoginRequest {
-    token: string;
+    code: string;
 }
 
 export interface RegisterRequest {
