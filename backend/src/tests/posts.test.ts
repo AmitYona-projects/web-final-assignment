@@ -10,6 +10,8 @@ import config from "../config";
 import { logger } from "../utils/logger";
 import { IAuthResponse } from "../express/auth/interface";
 import { getMockLoginUser } from "./utils";
+import { buildFilter, buildSort } from "../express/posts/manager";
+import { GeminiManager } from "../express/gemini/manager";
 
 let app: Application;
 let server: Server;
@@ -38,6 +40,156 @@ const baseUrl = config.test.posts.route;
 
 let newPostId = "";
 let user2AccessToken = "";
+
+// ── buildSort unit tests ───────────────────────────────────────────────────
+
+describe("buildSort", () => {
+    test("returns newest-first sort when no argument is given", () => {
+        expect(buildSort()).toEqual({ createdAt: -1 });
+    });
+
+    test("returns newest-first sort for unknown/unsupported sort string", () => {
+        expect(buildSort("random")).toEqual({ createdAt: -1 });
+    });
+
+    test("returns oldest-first sort for 'oldest'", () => {
+        expect(buildSort("oldest")).toEqual({ createdAt: 1 });
+    });
+
+    test("returns likes-desc sort for 'most-liked'", () => {
+        expect(buildSort("most-liked")).toEqual({ likesCount: -1, createdAt: -1 });
+    });
+
+    test("returns comments-desc sort for 'most-commented'", () => {
+        expect(buildSort("most-commented")).toEqual({ commentsCount: -1, createdAt: -1 });
+    });
+});
+
+// ── buildFilter unit tests ─────────────────────────────────────────────────
+
+describe("buildFilter", () => {
+    let searchCategoriesSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+        searchCategoriesSpy = jest.spyOn(GeminiManager, "searchCategories").mockResolvedValue([]);
+    });
+
+    afterEach(() => {
+        searchCategoriesSpy.mockRestore();
+    });
+
+    test("returns empty filter and no aiCategories for empty params", async () => {
+        const { filter, aiCategories } = await buildFilter({});
+        expect(filter).toEqual({});
+        expect(aiCategories).toBeUndefined();
+    });
+
+    test("merges baseFilter into the result", async () => {
+        const { filter } = await buildFilter({}, { owner: "user123" });
+        expect(filter).toMatchObject({ owner: "user123" });
+    });
+
+    test("adds case-insensitive drinkName regex for 'search' param", async () => {
+        const { filter } = await buildFilter({ search: "mojito" });
+        expect(filter.drinkName).toEqual({ $regex: "mojito", $options: "i" });
+    });
+
+    test("adds $in categories filter for 'categories' param", async () => {
+        const { filter } = await buildFilter({ categories: ["sweet", "fruity"] });
+        expect(filter.categories).toEqual({ $in: ["sweet", "fruity"] });
+    });
+
+    test("does NOT add categories filter when categories array is empty", async () => {
+        const { filter } = await buildFilter({ categories: [] });
+        expect(filter.categories).toBeUndefined();
+    });
+
+    test("adds likes existence filter for 'hasLikes: true'", async () => {
+        const { filter } = await buildFilter({ hasLikes: true });
+        expect(filter["likes.0"]).toEqual({ $exists: true });
+    });
+
+    test("does NOT add likes filter when 'hasLikes' is false", async () => {
+        const { filter } = await buildFilter({ hasLikes: false });
+        expect(filter["likes.0"]).toBeUndefined();
+    });
+
+    test("adds comments existence filter for 'hasComments: true'", async () => {
+        const { filter } = await buildFilter({ hasComments: true });
+        expect(filter["comments.0"]).toEqual({ $exists: true });
+    });
+
+    test("does NOT add comments filter when 'hasComments' is false", async () => {
+        const { filter } = await buildFilter({ hasComments: false });
+        expect(filter["comments.0"]).toBeUndefined();
+    });
+
+    test("combines multiple filter params in a single filter object", async () => {
+        const { filter } = await buildFilter({
+            search: "lemon",
+            categories: ["sour"],
+            hasLikes: true,
+            hasComments: true,
+        });
+        expect(filter.drinkName).toEqual({ $regex: "lemon", $options: "i" });
+        expect(filter.categories).toEqual({ $in: ["sour"] });
+        expect(filter["likes.0"]).toEqual({ $exists: true });
+        expect(filter["comments.0"]).toEqual({ $exists: true });
+    });
+
+    test("calls GeminiManager.searchCategories when aiPrompt is provided", async () => {
+        searchCategoriesSpy.mockResolvedValue(["tropical", "sweet"]);
+
+        await buildFilter({ aiPrompt: "something tropical" });
+
+        expect(searchCategoriesSpy).toHaveBeenCalledTimes(1);
+        expect(searchCategoriesSpy).toHaveBeenCalledWith("something tropical");
+    });
+
+    test("sets categories $in filter from AI results when aiPrompt matches categories", async () => {
+        searchCategoriesSpy.mockResolvedValue(["tropical", "sweet"]);
+
+        const { filter, aiCategories } = await buildFilter({ aiPrompt: "tropical vibes" });
+
+        expect(filter.categories).toEqual({ $in: ["tropical", "sweet"] });
+        expect(aiCategories).toEqual(["tropical", "sweet"]);
+    });
+
+    test("does NOT set categories filter when AI returns empty array for aiPrompt", async () => {
+        searchCategoriesSpy.mockResolvedValue([]);
+
+        const { filter, aiCategories } = await buildFilter({ aiPrompt: "something obscure" });
+
+        expect(filter.categories).toBeUndefined();
+        expect(aiCategories).toEqual([]);
+    });
+
+    test("aiPrompt takes precedence over manual categories param", async () => {
+        searchCategoriesSpy.mockResolvedValue(["herbal"]);
+
+        const { filter } = await buildFilter({
+            aiPrompt: "herby drink",
+            categories: ["sweet", "sour"],
+        });
+
+        expect(filter.categories).toEqual({ $in: ["herbal"] });
+        expect(searchCategoriesSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test("does NOT call GeminiManager when only manual categories are provided", async () => {
+        await buildFilter({ categories: ["bitter"] });
+        expect(searchCategoriesSpy).not.toHaveBeenCalled();
+    });
+
+    test("baseFilter is preserved alongside all built conditions", async () => {
+        const { filter } = await buildFilter({ search: "rum", hasLikes: true }, { owner: "abc123" });
+        expect(filter.owner).toBe("abc123");
+        expect(filter.drinkName).toBeDefined();
+        expect(filter["likes.0"]).toBeDefined();
+    });
+});
+
+// ── integration tests ──────────────────────────────────────────────────────
 
 describe("posts tests", () => {
     test("get all posts", async () => {
@@ -78,15 +230,15 @@ describe("posts tests", () => {
             .get(`${baseUrl}/sender?senderId=${loginedUserData.user._id}`)
             .set("Authorization", `Bearer ${loginedUserData.accessToken}`);
         expect(response.statusCode).toBe(200);
-        expect(response.body.length).toBe(1);
-        expect(response.body[0].drinkName).toBe(postsTests[0].drinkName);
-        expect(response.body[0].instructions).toBe(postsTests[0].instructions);
+        expect(response.body.posts.length).toBe(1);
+        expect(response.body.posts[0].drinkName).toBe(postsTests[0].drinkName);
+        expect(response.body.posts[0].instructions).toBe(postsTests[0].instructions);
     });
 
     test("returns empty array for get post by userId that does not exist", async () => {
         const response = await request(app).get(`${baseUrl}/sender?senderId=6961063565cff8afd58a093d`);
         expect(response.statusCode).toBe(200);
-        expect(response.body.length).toBe(0);
+        expect(response.body.posts.length).toBe(0);
     });
 
     test("update post", async () => {

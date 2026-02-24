@@ -7,7 +7,7 @@ import { GeminiManager } from "../gemini/manager";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MongoFilter = Record<string, any>;
 
-const buildFilter = async (params: PostSearchParams, baseFilter: MongoFilter = {}) => {
+export const buildFilter = async (params: PostSearchParams, baseFilter: MongoFilter = {}) => {
     const filter: MongoFilter = { ...baseFilter };
     let aiCategories: PostSearchResult["aiCategories"];
 
@@ -35,7 +35,7 @@ const buildFilter = async (params: PostSearchParams, baseFilter: MongoFilter = {
     return { filter, aiCategories };
 };
 
-const buildSort = (sort?: string): Record<string, 1 | -1> => {
+export const buildSort = (sort?: string): Record<string, 1 | -1> => {
     switch (sort) {
         case "oldest":
             return { createdAt: 1 };
