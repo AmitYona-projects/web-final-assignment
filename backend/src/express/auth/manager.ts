@@ -70,24 +70,35 @@ export class AuthManager {
     };
 
     static refreshToken = async (refreshToken: string): Promise<IAuthResponse> => {
-        const decoded = verifyRefreshToken(refreshToken);
+        let decoded;
+        try {
+            decoded = verifyRefreshToken(refreshToken);
+        } catch {
+            throw new ServerError(StatusCodes.UNAUTHORIZED, "Invalid refresh token");
+        }
+
         const user = await UserModel.findById(decoded._id);
 
         if (!user) throw new ServerError(StatusCodes.NOT_FOUND, "User not found");
 
         if (!user.refreshTokens.includes(refreshToken)) {
-            user.refreshTokens = [];
-            await user.save();
+            await UserModel.updateOne({ _id: user._id }, { $set: { refreshTokens: [] } });
 
             throw new ServerError(StatusCodes.UNAUTHORIZED, "Refresh token has been revoked");
         }
 
         const { accessToken: newAccessToken, refreshToken: newRefreshToken } = generateTokens(user._id.toString());
-        user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
-        user.refreshTokens.push(newRefreshToken);
-        await user.save();
+        const newTokens = user.refreshTokens.filter((token: string) => token !== refreshToken);
+        newTokens.push(newRefreshToken);
+        const updatedUser = await UserModel.findByIdAndUpdate(
+            user._id,
+            { $set: { refreshTokens: newTokens } },
+            { new: true }
+        )
+            .lean()
+            .exec();
 
-        return { accessToken: newAccessToken, refreshToken: newRefreshToken, user };
+        return { accessToken: newAccessToken, refreshToken: newRefreshToken, user: updatedUser! };
     };
 
     static loginGoogle = async (req: Request): Promise<IAuthResponse> => {

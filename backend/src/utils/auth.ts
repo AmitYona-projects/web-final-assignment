@@ -1,5 +1,6 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import config from "../config";
 import { ITokenInfo } from "../express/auth/interface";
 import { ServerError } from "./errors";
@@ -8,13 +9,13 @@ import { StatusCodes } from "http-status-codes";
 const { jwtSecret, jwtRefreshSecret, accessTokenExpiration, refreshTokenExpiration, saltRounds } = config.auth;
 
 export const generateAccessToken = (userId: string): string => {
-    return jwt.sign({ _id: userId }, jwtSecret, {
+    return jwt.sign({ _id: userId, jti: crypto.randomUUID() }, jwtSecret, {
         expiresIn: accessTokenExpiration,
     } as SignOptions);
 };
 
 export const generateRefreshToken = (userId: string): string => {
-    return jwt.sign({ _id: userId }, jwtRefreshSecret, {
+    return jwt.sign({ _id: userId, jti: crypto.randomUUID() }, jwtRefreshSecret, {
         expiresIn: refreshTokenExpiration,
     } as SignOptions);
 };
