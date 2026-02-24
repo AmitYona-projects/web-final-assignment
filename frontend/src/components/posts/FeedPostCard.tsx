@@ -9,6 +9,7 @@ import {
     IconButton,
     Button,
 } from "@mui/material";
+import DrinkCategoryChips from "./DrinkCategoryChips";
 import {
     Favorite as FavoriteIcon,
     FavoriteBorder as FavoriteBorderIcon,
@@ -74,6 +75,7 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({
                         {expanded ? "Show less" : "Read more"}
                     </Button>
                 )}
+                <DrinkCategoryChips categories={post.categories} sx={{ mt: 1 }} />
             </CardContent>
 
             <CardActions sx={{ px: 2, justifyContent: "space-between" }}>

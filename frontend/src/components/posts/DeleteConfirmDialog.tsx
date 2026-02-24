@@ -2,24 +2,30 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography }
 import type React from "react";
 
 export interface DeleteConfirmDialogProps {
-    open: boolean;
+    postId: string | null;
     onClose: () => void;
-    onConfirm: () => void;
+    deletePost: (id: string, options?: { onSuccess?: () => void }) => void;
     isDeleting: boolean;
     title?: string;
     message?: string;
 }
 
 const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
-    open,
+    postId,
     onClose,
-    onConfirm,
+    deletePost,
     isDeleting,
     title = "Delete Post",
     message = "Are you sure you want to delete this post? This action cannot be undone.",
 }) => {
+    const handleConfirm = () => {
+        if (postId) {
+            deletePost(postId, { onSuccess: onClose });
+        }
+    };
+
     return (
-        <Dialog open={open} onClose={onClose}>
+        <Dialog open={!!postId} onClose={onClose}>
             <DialogTitle>{title}</DialogTitle>
             <DialogContent>
                 <Typography>{message}</Typography>
@@ -29,7 +35,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
                     Cancel
                 </Button>
                 <Button
-                    onClick={onConfirm}
+                    onClick={handleConfirm}
                     variant="contained"
                     color="error"
                     disabled={isDeleting}

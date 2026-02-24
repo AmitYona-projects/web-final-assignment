@@ -8,6 +8,7 @@ import {
     Chip,
     IconButton,
 } from "@mui/material";
+import DrinkCategoryChips from "./DrinkCategoryChips";
 import { Edit as EditIcon, Delete as DeleteIcon, Favorite as FavoriteIcon, Comment as CommentIcon } from "@mui/icons-material";
 import type React from "react";
 import type { Post } from "../../services/posts";
@@ -46,6 +47,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onEdit, onDelete }) => {
                 >
                     {post.instructions}
                 </Typography>
+                <DrinkCategoryChips categories={post.categories} sx={{ mt: 1 }} />
                 <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
                     <Chip
                         icon={<FavoriteIcon />}

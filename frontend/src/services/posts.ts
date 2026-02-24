@@ -1,4 +1,5 @@
 import api from "./api";
+import type { DrinkCategory } from "../types/posts";
 
 export interface Post {
     _id: string;
@@ -6,6 +7,7 @@ export interface Post {
     drinkName: string;
     instructions: string;
     drinkImage: string;
+    categories: DrinkCategory[];
     comments: Comment[];
     likes: string[];
     createdAt: string;
@@ -29,27 +31,55 @@ export interface CreatePostRequest {
     drinkName: string;
     instructions: string;
     drinkImage?: File;
+    categories?: DrinkCategory[];
 }
 
 export interface UpdatePostRequest {
     drinkName?: string;
     instructions?: string;
     drinkImage?: File;
+    categories?: DrinkCategory[];
 }
 
-export interface PaginatedPosts {
+export interface PostSearchParams {
+    skip?: number;
+    limit?: number;
+    search?: string;
+    categories?: DrinkCategory[];
+    sort?: string;
+    hasLikes?: boolean;
+    hasComments?: boolean;
+    aiPrompt?: string;
+}
+
+export interface PostSearchResult {
     posts: Post[];
     total: number;
+    aiCategories?: DrinkCategory[];
 }
 
+const buildSearchQuery = (params: PostSearchParams): string => {
+    const query = new URLSearchParams();
+    if (params.skip) query.set("skip", String(params.skip));
+    if (params.limit) query.set("limit", String(params.limit));
+    if (params.search) query.set("search", params.search);
+    if (params.sort) query.set("sort", params.sort);
+    if (params.hasLikes) query.set("hasLikes", "true");
+    if (params.hasComments) query.set("hasComments", "true");
+    if (params.aiPrompt) query.set("aiPrompt", params.aiPrompt);
+    params.categories?.forEach((cat) => query.append("categories", cat));
+    return query.toString();
+};
+
 export const postsService = {
-    getAllPosts: async (skip = 0, limit = 10): Promise<PaginatedPosts> => {
-        const response = await api.get(`/posts?skip=${skip}&limit=${limit}`);
+    getAllPosts: async (params: PostSearchParams = {}): Promise<PostSearchResult> => {
+        const response = await api.get(`/posts?${buildSearchQuery(params)}`);
         return response.data;
     },
 
-    getUserPosts: async (userId: string): Promise<Post[]> => {
-        const response = await api.get(`/posts/sender?senderId=${userId}`);
+    getUserPosts: async (userId: string, params: PostSearchParams = {}): Promise<PostSearchResult> => {
+        const query = buildSearchQuery(params);
+        const response = await api.get(`/posts/sender?senderId=${userId}${query ? `&${query}` : ""}`);
         return response.data;
     },
 
@@ -63,6 +93,7 @@ export const postsService = {
         formData.append("drinkName", data.drinkName);
         formData.append("instructions", data.instructions);
         if (data.drinkImage) formData.append("drinkImage", data.drinkImage);
+        data.categories?.forEach((cat) => formData.append("categories", cat));
 
         const response = await api.post("/posts", formData, {
             headers: { "Content-Type": "multipart/form-data" },
@@ -75,6 +106,7 @@ export const postsService = {
         if (data.drinkName) formData.append("drinkName", data.drinkName);
         if (data.instructions) formData.append("instructions", data.instructions);
         if (data.drinkImage) formData.append("drinkImage", data.drinkImage);
+        data.categories?.forEach((cat) => formData.append("categories", cat));
 
         const response = await api.put(`/posts/${id}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },

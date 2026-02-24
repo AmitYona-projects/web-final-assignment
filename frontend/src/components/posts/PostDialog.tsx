@@ -1,51 +1,103 @@
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Stack, Alert, Divider, Chip } from "@mui/material";
 import { AutoAwesome as AutoAwesomeIcon } from "@mui/icons-material";
-import type { Control, UseFormHandleSubmit } from "react-hook-form";
-import type { FieldErrors } from "react-hook-form";
 import type React from "react";
-import type { Post } from "../../services/posts";
-import type { PostFormData } from "../../types/posts";
+import type { Post, CreatePostRequest, UpdatePostRequest } from "../../services/posts";
+import { postSchema, type PostFormData } from "../../types/posts";
+import { geminiService } from "../../services/gemini";
+import { config } from "../../config";
+import { useImageUpload } from "../../hooks/useImageUpload";
 import PostForm from "./PostForm";
 import AIGeneratorSection from "./AIGeneratorSection";
 
 export interface PostDialogProps {
     open: boolean;
     onClose: () => void;
-    onSubmit: (data: PostFormData) => void;
     post?: Post | null;
-    isSubmitting: boolean;
-    control: Control<PostFormData>;
-    handleSubmit: UseFormHandleSubmit<PostFormData>;
-    errors: FieldErrors<PostFormData>;
-    aiPrompt: string;
-    onAiPromptChange: (prompt: string) => void;
-    onGenerateWithAI: () => void;
-    isGenerating: boolean;
-    aiError: string | null;
-    onAiErrorDismiss: () => void;
-    imagePreview?: string;
-    onImageChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    createPost: (data: CreatePostRequest, options?: { onSuccess?: () => void }) => void;
+    updatePost: (params: { id: string; data: UpdatePostRequest }, options?: { onSuccess?: () => void }) => void;
+    isCreating: boolean;
+    isUpdating: boolean;
 }
 
 const PostDialog: React.FC<PostDialogProps> = ({
     open,
     onClose,
-    onSubmit,
     post,
-    isSubmitting,
-    control,
-    handleSubmit,
-    errors,
-    aiPrompt,
-    onAiPromptChange,
-    onGenerateWithAI,
-    isGenerating,
-    aiError,
-    onAiErrorDismiss,
-    imagePreview,
-    onImageChange,
+    createPost,
+    updatePost,
+    isCreating,
+    isUpdating,
 }) => {
     const isEditMode = !!post;
+    const isSubmitting = isCreating || isUpdating;
+
+    const { imageFile, imagePreview, handleImageChange, resetImage, setImagePreview } = useImageUpload();
+    const [aiPrompt, setAiPrompt] = useState("");
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [aiError, setAiError] = useState<string | null>(null);
+
+    const { control, handleSubmit, formState: { errors }, reset } = useForm<PostFormData>({
+        resolver: zodResolver(postSchema),
+        defaultValues: { drinkName: "", instructions: "", categories: [] },
+    });
+
+    useEffect(() => {
+        if (open) {
+            if (post) {
+                reset({
+                    drinkName: post.drinkName,
+                    instructions: post.instructions,
+                    categories: post.categories || [],
+                });
+                setImagePreview(post.drinkImage ? `${config.uploadFolderUrl}${post.drinkImage}` : undefined);
+            } else {
+                reset({ drinkName: "", instructions: "", categories: [] });
+                resetImage();
+            }
+            setAiPrompt("");
+            setAiError(null);
+        }
+    }, [open, post, reset]);
+
+    const handleGenerateWithAI = async () => {
+        if (!aiPrompt.trim()) {
+            setAiError("Please enter a description for the cocktail you want to create");
+            return;
+        }
+        setIsGenerating(true);
+        setAiError(null);
+        try {
+            const recipe = await geminiService.generateCocktailRecipe(aiPrompt);
+            reset({
+                drinkName: recipe.drinkName,
+                instructions: recipe.instructions,
+                categories: recipe.categories || [],
+            });
+            setAiPrompt("");
+        } catch (err) {
+            console.error("AI generation error:", err);
+            setAiError(err instanceof Error ? err.message : "Failed to generate cocktail recipe");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const onSubmit = (data: PostFormData) => {
+        if (post) {
+            updatePost(
+                { id: post._id, data: { ...data, ...(imageFile && { drinkImage: imageFile }) } },
+                { onSuccess: onClose }
+            );
+        } else {
+            createPost(
+                { ...data, ...(imageFile && { drinkImage: imageFile }) },
+                { onSuccess: onClose }
+            );
+        }
+    };
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -61,11 +113,11 @@ const PostDialog: React.FC<PostDialogProps> = ({
 
                                 <AIGeneratorSection
                                     prompt={aiPrompt}
-                                    onPromptChange={onAiPromptChange}
-                                    onGenerate={onGenerateWithAI}
+                                    onPromptChange={setAiPrompt}
+                                    onGenerate={handleGenerateWithAI}
                                     isGenerating={isGenerating}
                                     error={aiError}
-                                    onErrorDismiss={onAiErrorDismiss}
+                                    onErrorDismiss={() => setAiError(null)}
                                 />
 
                                 <Divider>
@@ -79,7 +131,7 @@ const PostDialog: React.FC<PostDialogProps> = ({
                             errors={errors}
                             disabled={isSubmitting}
                             imagePreview={imagePreview}
-                            onImageChange={onImageChange}
+                            onImageChange={handleImageChange}
                         />
                     </Stack>
                 </DialogContent>
@@ -88,11 +140,7 @@ const PostDialog: React.FC<PostDialogProps> = ({
                         Cancel
                     </Button>
                     <Button type="submit" variant="contained" disabled={isSubmitting}>
-                        {isSubmitting
-                            ? "Saving..."
-                            : isEditMode
-                                ? "Update"
-                                : "Create"}
+                        {isSubmitting ? "Saving..." : isEditMode ? "Update" : "Create"}
                     </Button>
                 </DialogActions>
             </form>

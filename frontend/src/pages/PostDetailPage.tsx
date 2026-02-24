@@ -16,9 +16,9 @@ import {
     ListItemText,
     Avatar,
     Divider,
-    CircularProgress,
-    Alert,
 } from "@mui/material";
+import { PageStatus } from "../components/ui";
+import { DrinkCategoryChips } from "../components/posts";
 import {
     ArrowBack as ArrowBackIcon,
     Favorite as FavoriteIcon,
@@ -83,26 +83,11 @@ const PostDetailPage: React.FC = () => {
         }
     };
 
-    if (isLoading) {
-        return (
-            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error || !post) {
-        return (
-            <Box sx={{ p: 4 }}>
-                <Alert severity="error">Failed to load post</Alert>
-            </Box>
-        );
-    }
-
     const currentUserId = user?._id || "";
     const hasLiked = post.likes.includes(currentUserId);
 
     return (
+        <PageStatus isLoading={isLoading} error={error || !post} errorMessage="Failed to load post">
         <Box sx={{ p: 4, maxWidth: 800, mx: "auto" }}>
             <Button
                 startIcon={<ArrowBackIcon />}
@@ -129,6 +114,8 @@ const PostDetailPage: React.FC = () => {
                     <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
                         {post.instructions}
                     </Typography>
+
+                    <DrinkCategoryChips categories={post!.categories} sx={{ mt: 2 }} />
 
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
                         <IconButton
@@ -227,6 +214,7 @@ const PostDetailPage: React.FC = () => {
                 </CardContent>
             </Card>
         </Box>
+        </PageStatus>
     );
 };
 

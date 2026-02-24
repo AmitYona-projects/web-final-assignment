@@ -7,13 +7,11 @@ import {
     Button,
     Typography,
     Alert,
-    Divider,
     Link,
-    Stack,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
-import { GoogleLogin } from "@react-oauth/google";
+import { GoogleAuthSection } from "../components/ui";
 
 const loginSchema = z.object({
     email: z.string().email("Invalid email address").min(1, "Email is required"),
@@ -103,23 +101,7 @@ const LoginPage: React.FC = () => {
                 </Button>
             </form>
 
-            <Divider sx={{ my: 3 }}>
-                <Typography variant="body2" color="text.secondary">
-                    OR
-                </Typography>
-            </Divider>
-
-            <Stack direction="row" justifyContent="center" alignItems="center">
-                <GoogleLogin
-                    onSuccess={googleLogin.triggerFlow}
-                    onError={() => console.error("Google login error")}
-                    text="continue_with"
-                    shape="circle"
-                    theme="outline"
-                    logo_alignment="center"
-                    width="700px"
-                />
-            </Stack>
+            <GoogleAuthSection onSuccess={googleLogin.triggerFlow} />
 
             <Box sx={{ textAlign: "center" }}>
                 <Typography variant="body2" color="text.secondary">

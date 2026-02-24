@@ -211,6 +211,32 @@ postRouter.delete(
     wrapAuthMiddleware(PostController.deletePostById)
 );
 
+/**
+ * @swagger
+ * /posts/:id/like:
+ *   post:
+ *     summary: Toggle like on a post
+ *     tags: [Posts]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID of the post
+ *         example: "67a1d205c689f9a4e5476a1b"
+ *     responses:
+ *       '200':
+ *         description: Post like toggled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Post'
+ *       '400':
+ *         $ref: '#/components/responses/BadRequestError'
+ *       '404':
+ *         $ref: '#/components/responses/NotFoundError'
+ *       '500':
+ *         $ref: '#/components/responses/InternalServerError'
+ */
 postRouter.post(
     "/:id/like",
     authMiddleware,
@@ -218,6 +244,45 @@ postRouter.post(
     wrapAuthMiddleware(PostController.toggleLike)
 );
 
+/**
+ * @swagger
+ * /posts/:id/comments:
+ *   post:
+ *     summary: Add a comment to a post
+ *     tags: [Posts]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID of the post
+ *         example: "67a1d205c689f9a4e5476a1b"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - commentText
+ *             properties:
+ *               commentText:
+ *                 type: string
+ *                 description: The comment text
+ *                 example: "Great cocktail recipe!"
+ *     responses:
+ *       '201':
+ *         description: Comment added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Post'
+ *       '400':
+ *         $ref: '#/components/responses/BadRequestError'
+ *       '404':
+ *         $ref: '#/components/responses/NotFoundError'
+ *       '500':
+ *         $ref: '#/components/responses/InternalServerError'
+ */
 postRouter.post(
     "/:id/comments",
     authMiddleware,
@@ -225,6 +290,37 @@ postRouter.post(
     wrapAuthMiddleware(PostController.addComment)
 );
 
+/**
+ * @swagger
+ * /posts/:id/comments/:commentId:
+ *   delete:
+ *     summary: Delete a comment from a post
+ *     tags: [Posts]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID of the post
+ *         example: "67a1d205c689f9a4e5476a1b"
+ *       - name: commentId
+ *         in: path
+ *         required: true
+ *         description: ID of the comment
+ *         example: "67a1d205c689f9a4e5476a1c"
+ *     responses:
+ *       '200':
+ *         description: Comment deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Post'
+ *       '400':
+ *         $ref: '#/components/responses/BadRequestError'
+ *       '404':
+ *         $ref: '#/components/responses/NotFoundError'
+ *       '500':
+ *         $ref: '#/components/responses/InternalServerError'
+ */
 postRouter.delete(
     "/:id/comments/:commentId",
     authMiddleware,

@@ -6,7 +6,8 @@ import { initializeMongo } from "../utils/mongo";
 import { Server } from "../express/server";
 import config from "../config";
 import { logger } from "../utils/logger";
-import { generateAccessToken } from "../utils/auth";
+import { generateAccessToken, generateRefreshToken } from "../utils/auth";
+import { OAuth2Client } from "google-auth-library";
 
 let app: Application;
 let server: Server;
@@ -185,11 +186,18 @@ describe("Authentication API Tests", () => {
         });
 
         test("fails to refresh with revoked refresh token", async () => {
-            await request(app).post(`${authBaseUrl}/logout`).send({
-                refreshToken: refreshToken,
+            const loginRes = await request(app).post(`${authBaseUrl}/login`).send({
+                email: testUser.email,
+                password: testUser.password,
+            });
+            const freshAccessToken = loginRes.body.accessToken;
+            const freshRefreshToken = loginRes.body.refreshToken;
+
+            await request(app).post(`${authBaseUrl}/logout`).set("Authorization", `Bearer ${freshAccessToken}`).send({
+                refreshToken: freshRefreshToken,
             });
             const response = await request(app).post(`${authBaseUrl}/refresh-token`).send({
-                refreshToken: refreshToken,
+                refreshToken: freshRefreshToken,
             });
 
             expect(response.statusCode).toBe(401);
@@ -217,25 +225,28 @@ describe("Authentication API Tests", () => {
         });
 
         test("fails to refresh token by non existing user in token", async () => {
-            const nonExistingUserToken = generateAccessToken("6963689b3eefc42e308714bc");
+            const nonExistingUserRefreshToken = generateRefreshToken("6963689b3eefc42e308714bc");
             const response = await request(app)
                 .post(`${authBaseUrl}/refresh-token`)
-                .set("Authorization", `Bearer ${nonExistingUserToken}`)
-                .send({ refreshToken: refreshToken });
+                .send({ refreshToken: nonExistingUserRefreshToken });
             expect(response.statusCode).toBe(404);
             expect(response.body.message).toBe("User not found");
         });
 
         test("fails to refresh token by revoked refresh token", async () => {
-            await request(app).post(`${authBaseUrl}/logout`).set("Authorization", `Bearer ${accessToken}`).send({
-                refreshToken: refreshToken,
+            const loginRes = await request(app).post(`${authBaseUrl}/login`).send({
+                email: testUser.email,
+                password: testUser.password,
             });
-            const response = await request(app)
-                .post(`${authBaseUrl}/refresh-token`)
-                .set("Authorization", `Bearer ${accessToken}`)
-                .send({
-                    refreshToken: refreshToken,
-                });
+            const freshAccessToken = loginRes.body.accessToken;
+            const freshRefreshToken = loginRes.body.refreshToken;
+
+            await request(app).post(`${authBaseUrl}/logout`).set("Authorization", `Bearer ${freshAccessToken}`).send({
+                refreshToken: freshRefreshToken,
+            });
+            const response = await request(app).post(`${authBaseUrl}/refresh-token`).send({
+                refreshToken: freshRefreshToken,
+            });
 
             expect(response.statusCode).toBe(401);
             expect(response.body.message).toBe("Refresh token has been revoked");
@@ -302,6 +313,99 @@ describe("Authentication API Tests", () => {
                 });
             expect(response.statusCode).toBe(404);
             expect(response.body.message).toBe("User not found");
+        });
+    });
+
+    describe("Google Login", () => {
+        let verifyIdTokenSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+            verifyIdTokenSpy = jest.spyOn(OAuth2Client.prototype, "verifyIdToken");
+        });
+
+        afterEach(() => {
+            verifyIdTokenSpy.mockRestore();
+        });
+
+        test("fails when no code is provided", async () => {
+            const response = await request(app).post(`${authBaseUrl}/login-google`).send({});
+
+            expect(response.statusCode).toBe(400);
+            expect(response.body.message).toContain("Authorization code is required");
+        });
+
+        test("fails when Google token verification throws an error", async () => {
+            verifyIdTokenSpy.mockRejectedValue(new Error("Token has been expired or revoked"));
+
+            const response = await request(app)
+                .post(`${authBaseUrl}/login-google`)
+                .send({ code: "invalid-google-token" });
+
+            expect(response.statusCode).toBe(401);
+            expect(response.body.message).toContain("Google authentication failed");
+        });
+
+        test("creates a new user and logs in successfully via Google", async () => {
+            const newGoogleEmail = "new-google-user@gmail.com";
+
+            verifyIdTokenSpy.mockResolvedValue({
+                getPayload: () => ({
+                    email: newGoogleEmail,
+                    name: "New Google User",
+                }),
+            });
+
+            const response = await request(app)
+                .post(`${authBaseUrl}/login-google`)
+                .send({ code: "valid-google-token" });
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body.accessToken).toBeDefined();
+            expect(response.body.refreshToken).toBeDefined();
+            expect(response.body.user).toBeDefined();
+            expect(response.body.user.email).toBe(newGoogleEmail);
+
+            const createdUser = await UserModel.findOne({ email: newGoogleEmail });
+            expect(createdUser).not.toBeNull();
+        });
+
+        test("logs in an existing user successfully via Google", async () => {
+            const existingGoogleEmail = "existing-google-user@gmail.com";
+            await UserModel.create({
+                email: existingGoogleEmail,
+                username: "existinggoogleuser",
+                password: "hashed-password",
+                refreshTokens: [],
+            });
+
+            verifyIdTokenSpy.mockResolvedValue({
+                getPayload: () => ({
+                    email: existingGoogleEmail,
+                    name: "Existing Google User",
+                }),
+            });
+
+            const response = await request(app)
+                .post(`${authBaseUrl}/login-google`)
+                .send({ code: "valid-google-token" });
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body.accessToken).toBeDefined();
+            expect(response.body.refreshToken).toBeDefined();
+            expect(response.body.user.email).toBe(existingGoogleEmail);
+        });
+
+        test("fails when token payload has no email", async () => {
+            verifyIdTokenSpy.mockResolvedValue({
+                getPayload: () => ({ name: "User Without Email" }),
+            });
+
+            const response = await request(app)
+                .post(`${authBaseUrl}/login-google`)
+                .send({ code: "valid-google-token" });
+
+            expect(response.statusCode).toBe(400);
+            expect(response.body.message).toContain("email not found");
         });
     });
 });

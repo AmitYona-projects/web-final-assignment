@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { IMongoPost } from "./interface";
+import { DRINK_CATEGORIES, IMongoPost } from "./interface";
 import config from "../../config";
 
 const postSchema = new mongoose.Schema<IMongoPost>(
@@ -20,6 +20,11 @@ const postSchema = new mongoose.Schema<IMongoPost>(
         drinkImage: {
             type: String,
             required: false,
+        },
+        categories: {
+            type: [String],
+            enum: DRINK_CATEGORIES,
+            default: [],
         },
         comments: {
             type: [
