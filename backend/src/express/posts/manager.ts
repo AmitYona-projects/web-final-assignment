@@ -21,7 +21,8 @@ export const buildFilter = async (params: PostSearchParams, baseFilter: MongoFil
     }
 
     if (params.search) {
-        filter.drinkName = { $regex: params.search, $options: "i" };
+        const searchRegex = { $regex: params.search, $options: "i" };
+        filter.$or = [{ drinkName: searchRegex }, { instructions: searchRegex }];
     }
 
     if (params.hasLikes) {

@@ -13,6 +13,7 @@ export interface RegisterRequest {
     email: string;
     password: string;
     username: string;
+    image?: File;
 }
 
 export interface ResetPasswordRequest {
@@ -41,8 +42,13 @@ export const authService = {
         return response.data;
     },
 
-    register: async (data: RegisterRequest): Promise<AuthResponse> => {
-        const response = await api.post<AuthResponse>("/auth/register", data);
+    register: async (formData: FormData): Promise<AuthResponse> => {
+        const response = await api.post<AuthResponse>("/auth/register", formData);
+        return response.data;
+    },
+
+    logout: async (refreshToken: string): Promise<{ message: string }> => {
+        const response = await api.post<{ message: string }>("/auth/logout", { refreshToken });
         return response.data;
     },
 

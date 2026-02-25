@@ -40,10 +40,14 @@ const PostForm: React.FC<PostFormProps> = ({ control, errors, disabled = false, 
                         label="Instructions"
                         fullWidth
                         multiline
-                        rows={4}
+                        rows={8}
                         error={!!errors.instructions}
                         helperText={errors.instructions?.message}
                         disabled={disabled}
+                        aria-expanded={true}
+                        sx={{
+                            direction: "rtl",
+                        }}
                     />
                 )}
             />

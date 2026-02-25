@@ -18,12 +18,10 @@ export type DrinkCategory = (typeof DRINK_CATEGORIES)[number];
 export const postSchema = z.object({
     drinkName: z
         .string()
-        .min(1, "Drink name is required")
-        .max(100, "Drink name cannot exceed 100 characters"),
+        .min(1, "Drink name is required"),
     instructions: z
         .string()
-        .min(10, "Instructions must be at least 10 characters")
-        .max(1000, "Instructions cannot exceed 1000 characters"),
+        .min(10, "Instructions must be at least 10 characters"),
     categories: z
         .array(z.enum(DRINK_CATEGORIES))
         .optional()

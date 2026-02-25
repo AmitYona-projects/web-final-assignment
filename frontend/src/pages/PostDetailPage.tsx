@@ -17,6 +17,7 @@ import {
     Avatar,
     Divider,
 } from "@mui/material";
+import ReactMarkdown from 'react-markdown';
 import { PageStatus } from "../components/ui";
 import { DrinkCategoryChips } from "../components/posts";
 import {
@@ -112,8 +113,8 @@ const PostDetailPage: React.FC = () => {
                     <Typography variant="h4" gutterBottom>
                         {post.drinkName}
                     </Typography>
-                    <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
-                        {post.instructions}
+                    <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: "pre-wrap", direction: "rtl" }}>
+                        <ReactMarkdown>{post.instructions}</ReactMarkdown>
                     </Typography>
 
                     <DrinkCategoryChips categories={post!.categories} sx={{ mt: 2 }} />
