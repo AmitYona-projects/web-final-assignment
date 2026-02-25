@@ -2,7 +2,7 @@ import { useInfiniteQuery, useMutation, useQueryClient, keepPreviousData } from 
 import { postsService, type PostSearchParams } from "../services/posts";
 import type { DrinkCategory } from "../types/posts";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 8;
 
 export const ALL_POSTS_QUERY_KEY = ["posts", "all"] as const;
 
@@ -36,27 +36,26 @@ export const useAllPosts = (searchParams: Omit<PostSearchParams, "skip" | "limit
     const total = data?.pages[0]?.total ?? 0;
     const aiCategories: DrinkCategory[] | undefined = data?.pages[0]?.aiCategories;
 
+    const invalidateAllPostQueries = () => {
+        queryClient.invalidateQueries({ queryKey: ALL_POSTS_QUERY_KEY });
+        queryClient.invalidateQueries({ queryKey: ["posts", "user"] });
+    };
+
     const toggleLikeMutation = useMutation({
         mutationFn: (postId: string) => postsService.toggleLike(postId),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ALL_POSTS_QUERY_KEY });
-        },
+        onSuccess: invalidateAllPostQueries,
     });
 
     const addCommentMutation = useMutation({
         mutationFn: ({ postId, commentText }: { postId: string; commentText: string }) =>
             postsService.addComment(postId, commentText),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ALL_POSTS_QUERY_KEY });
-        },
+        onSuccess: invalidateAllPostQueries,
     });
 
     const deleteCommentMutation = useMutation({
         mutationFn: ({ postId, commentId }: { postId: string; commentId: string }) =>
             postsService.deleteComment(postId, commentId),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ALL_POSTS_QUERY_KEY });
-        },
+        onSuccess: invalidateAllPostQueries,
     });
 
     return {

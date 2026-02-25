@@ -60,5 +60,8 @@ const postSchema = new mongoose.Schema<IMongoPost>(
 postSchema.index({ owner: 1 });
 postSchema.index({ createdAt: -1 });
 postSchema.index({ likes: 1 });
+postSchema.index({ categories: 1 });
+postSchema.index({ drinkName: 1 });
+postSchema.index({ instructions: 1 });
 
 export const PostModel = mongoose.model<IMongoPost>(config.mongo.postsCollectionName, postSchema);

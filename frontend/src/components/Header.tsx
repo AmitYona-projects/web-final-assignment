@@ -84,7 +84,7 @@ const Header: React.FC = () => {
                 >
                     <Home sx={{ mr: 1 }} />
                     <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-                        Social App
+                        CocktailAi
                     </Typography>
                 </Box>
 

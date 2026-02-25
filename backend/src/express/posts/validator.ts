@@ -2,7 +2,10 @@ import Joi from "joi";
 import { emptyRequestSchema, MongoIdSchema } from "../../utils/express/joi";
 import { DRINK_CATEGORIES } from "./interface";
 
-const categoriesSchema = Joi.array().items(Joi.string().valid(...DRINK_CATEGORIES)).single().optional();
+const categoriesSchema = Joi.array()
+    .items(Joi.string().valid(...DRINK_CATEGORIES))
+    .single()
+    .optional();
 
 const searchQuerySchema = {
     skip: Joi.number().integer().min(0).optional(),

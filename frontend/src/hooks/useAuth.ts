@@ -72,7 +72,15 @@ export const useAuth = () => {
     });
 
     const register = useMutation<AuthResponse, Error, RegisterRequest>({
-        mutationFn: authService.register,
+        mutationFn: (data) =>{
+            const formData = new FormData();
+            formData.append("email", data.email);
+            formData.append("password", data.password);
+            formData.append("username", data.username);
+            if (data.image) formData.append("image", data.image);
+
+            return authService.register(formData);
+        },
         onSuccess: (data) => {
             storeTokens(data.accessToken, data.refreshToken);
             queryClient.setQueryData(AUTH_QUERY_KEY, true);
@@ -113,10 +121,17 @@ export const useAuth = () => {
             error: register.error,
             data: register.data,
         },
-        logout: () => {
+        logout: async () => {
+            const refreshToken = localStorage.getItem(config.refreshTokenStorageKey);
+            if (refreshToken) {
+                try {
+                    await authService.logout(refreshToken);
+                } catch {
+                    // Ignore backend errors on logout - still clear local state
+                }
+            }
             clearTokens();
-            queryClient.setQueryData(AUTH_QUERY_KEY, false);
-            queryClient.invalidateQueries({ queryKey: AUTH_QUERY_KEY });
+            queryClient.clear();
             navigate("/auth/login");
         },
     };

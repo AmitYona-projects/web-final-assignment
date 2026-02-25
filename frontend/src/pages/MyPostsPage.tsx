@@ -83,7 +83,7 @@ const MyPostsPage: React.FC = () => {
                                 value={searchInput}
                                 onChange={setSearchInput}
                                 onSearch={handleSearch}
-                                placeholder="Search by drink name..."
+                                placeholder="Search for a drink..."
                             />
                         </Box>
 

@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import type React from "react";
 import type { Post } from "../../services/posts";
 import { config } from "../../config";
+import ReactMarkdown from 'react-markdown';
 
 export interface FeedPostCardProps {
     post: Post;
@@ -37,7 +38,7 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({
     const hasLiked = post.likes.includes(currentUserId);
 
     return (
-        <Card sx={{ display: "flex", flexDirection: "column", minHeight: 410 }}>
+        <Card sx={{ display: "flex", flexDirection: "column", minHeight: 470 }}>
             {post.drinkImage && (
                 <CardMedia
                     component="img"
@@ -62,9 +63,10 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({
                             WebkitLineClamp: 3,
                             WebkitBoxOrient: "vertical",
                         }),
+                        direction: "rtl",
                     }}
                 >
-                    {post.instructions}
+                    <ReactMarkdown>{post.instructions}</ReactMarkdown>
                 </Typography>
                 {post.instructions.length > 120 && (
                     <Button

@@ -7,12 +7,15 @@ import {
     Box,
     Chip,
     IconButton,
+    Button,
 } from "@mui/material";
 import DrinkCategoryChips from "./DrinkCategoryChips";
 import { Edit as EditIcon, Delete as DeleteIcon, Favorite as FavoriteIcon, Comment as CommentIcon } from "@mui/icons-material";
 import type React from "react";
 import type { Post } from "../../services/posts";
 import { config } from "../../config";
+import ReactMarkdown from "react-markdown";
+import { useState } from "react";
 
 export interface PostCardProps {
     post: Post;
@@ -21,6 +24,8 @@ export interface PostCardProps {
 }
 
 const PostCard: React.FC<PostCardProps> = ({ post, onEdit, onDelete }) => {
+    const [expanded, setExpanded] = useState(false);
+    
     return (
         <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
             <CardMedia
@@ -38,15 +43,27 @@ const PostCard: React.FC<PostCardProps> = ({ post, onEdit, onDelete }) => {
                     variant="body2"
                     color="text.secondary"
                     sx={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: "vertical",
+                        ...(!expanded && {
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: "vertical",
+                        }),
+                        direction: "rtl",
                     }}
                 >
-                    {post.instructions}
+                    <ReactMarkdown>{post.instructions}</ReactMarkdown>
                 </Typography>
+                {post.instructions.length > 120 && (
+                    <Button
+                        size="small"
+                        onClick={() => setExpanded(!expanded)}
+                        sx={{ p: 0, minWidth: "auto", textTransform: "none" }}
+                    >
+                        {expanded ? "Show less" : "Read more"}
+                    </Button>
+                )}
                 <DrinkCategoryChips categories={post.categories} sx={{ mt: 1 }} />
                 <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
                     <Chip
